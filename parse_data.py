@@ -1,4 +1,5 @@
 import pandas as pd
+import plotly.express as px
 
 # Aufgabe 7a
 df_year = pd.read_excel('data.xlsx', sheet_name='Jahr', skiprows=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 19, 20])
@@ -6,6 +7,8 @@ df_age = pd.read_excel('data.xlsx', sheet_name='Altersklasse', skiprows=[0, 1, 2
 df_income = pd.read_excel('data.xlsx', sheet_name='Einkommen', skiprows=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 19, 20])
 df_type = pd.read_excel('data.xlsx', sheet_name='Haushaltstyp', skiprows=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 19, 20])
 
+#Die Zellenbeschreibungen sind nicht alle in der ersten Spalte, sondern je nach Ebene eines eingerückt.
+#Dies wird hier bereinigt und damit man die Info zur Ebene nicht verliert eine zusätzliche Spalte 'Ebene' eingefügt
 def clean_data(dataframe):
     dataframe.columns.values[5] = 'Ebene'
     dataframe['Ebene'] = dataframe['Ebene'].astype(object)
@@ -34,8 +37,21 @@ df_age = clean_data(df_age)
 df_income = clean_data(df_income)
 df_type = clean_data(df_type)
 
-print(df_income.head(10))
 
+
+#Aufgabe 7b
+column_names = df_age.columns.tolist()
+column_names_chf = []
+column_names_percent = []
+for column in column_names:
+    if 'CHF' in column:
+        column_names_chf.append(column)
+    if '%' in column:
+        column_names_percent.append(column)
+
+#funktioniert nicht
+fig = px.scatter(x=column_names_chf, y=df_age.loc['61: Gesundheitsausgaben'][1::2])
+fig.show()
 
 
 
