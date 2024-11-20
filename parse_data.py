@@ -61,8 +61,8 @@ app = Dash (__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 app.layout = html.Div([html.H1("Dashboard Haushaltsausgaben"),
     dbc.Row([dbc.Col([dcc.Dropdown(options=['57: Wohnen und Energie','61: Gesundheitsausgaben','62: Verkehr'], value='57: Wohnen und Energie', id='chosen_category', multi=False)], width=6),
-             dbc.Col([dcc.Slider(0, 175, step=25, id='selected_range', value=0)
-            ], width=6)
+             dbc.Col([html.Label('Wähle den Startpunkt für die Y-Achse:'),
+                      dcc.Slider(0, 175, step=25, id='selected_range', value=0)], width=6)
     ]),
     dbc.Row([dbc.Col([dcc.Graph(id='graph1')], width=6),
              dbc.Col([dcc.Graph(id='graph2')], width=6)
