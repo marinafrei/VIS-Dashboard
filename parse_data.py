@@ -60,14 +60,26 @@ fig2.show()
 app = Dash (__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 app.layout = html.Div([html.H1("Dashboard Haushaltsausgaben"),
-    dbc.Row([dbc.Col([dcc.Dropdown(options=['57: Wohnen und Energie','61: Gesundheitsausgaben','62: Verkehr'], value='57: Wohnen und Energie', id='chosen_category', multi=False)], width=6),
-             dbc.Col([html.Label('Wähle den Startpunkt für die Y-Achse:'),
-                      dcc.Slider(0, 175, step=25, id='selected_range', value=0)], width=6)
+dbc.Tabs([
+    dbc.Tab(label='Tab mit zwei Diagrammen', tab_id='tab1', children =[
+        dbc.Row([dbc.Col([dcc.Dropdown(options=['57: Wohnen und Energie','61: Gesundheitsausgaben','62: Verkehr'], value='57: Wohnen und Energie', id='chosen_category', multi=False)], width=6),
+                dbc.Col([html.Label('Wähle den Startpunkt für die Y-Achse:'),
+                        dcc.Slider(0, 175, step=25, id='selected_range', value=0)], width=6)
+        ]),
+        dbc.Row([dbc.Col([dcc.Graph(id='graph1')], width=6),
+                dbc.Col([dcc.Graph(id='graph2')], width=6)
+        ], className='m-4')
     ]),
-    dbc.Row([dbc.Col([dcc.Graph(id='graph1')], width=6),
-             dbc.Col([dcc.Graph(id='graph2')], width=6)
-             ])], className='m-4')
-
+    dbc.Tab(label='Tab mit zwei weiteren Diagrammen', tab_id='tab2', children=[
+        dbc.Row([dbc.Col([dcc.RadioItems(['group', 'stack'], value='group', id='barmode')], width=6),
+                dbc.Col([dcc.Checklist(['6221: Beförderung von Personen auf Schienen', '6222: Beförderung von Personen auf Strassen', '6223: Beförderung von Personen mit Flugzeugen'], value=['6221: Beförderung von Personen auf Schienen'], id='checklist_categories')], width=6)
+        ]),
+        dbc.Row([dbc.Col([dcc.Graph(id='graph3')], width=6),
+                dbc.Col([dcc.Graph(id='graph4')], width=6)
+        ], className='m-4')
+    ])
+  ], active_tab='tab1')
+])
 
 
 @callback(Output("graph1", "figure"), Input("chosen_category","value"))
@@ -84,8 +96,26 @@ def update_graph2(slider_range):
     df_year_graph2 = df_year_chf[df_year_chf['Kategorie'] == '61: Gesundheitsausgaben'] 
     graph2 = px.line(df_year_graph2, x='Jahr', y='CHF', range_y=[slider_range, 300])
     graph2.update_layout()
-    print(slider_range)
-    return graph2   
+    return graph2
+
+@callback(Output("graph3", "figure"), Input("barmode","value"))
+
+def update_graph3(selected_barmode):
+    selected_categories = ['5111: Brot und Getreideprodukte', '5112: Fleisch']
+    df_age_graph3 = df_age_chf[df_age_chf['Kategorie'].isin(selected_categories)]
+    graph3 = px.bar(df_age_graph3, x='Altersklasse', y='CHF', color='Kategorie', barmode=selected_barmode)
+    graph3.update_layout(legend=dict(orientation='h', y=10))
+    return graph3
+
+@callback(Output("graph4", "figure"), Input("checklist_categories","value"))
+
+def update_graph4(categories):
+    selected_categories = categories
+    df_year_graph4 = df_year_chf[df_year_chf['Kategorie'].isin(selected_categories)]
+    graph4 = px.line(df_year_graph4, x='Jahr', y='CHF', color='Kategorie')
+    graph4.update_layout(legend=dict(orientation='h', y=10))
+    return graph4    
+
 
 if __name__ == '__main__':
     app.run_server(debug=False)
