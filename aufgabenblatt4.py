@@ -6,13 +6,9 @@ import dash_bootstrap_components as dbc
 
 # Aufgabe 7a
 df_year_chf = pd.read_excel('data.xlsx', sheet_name='Jahr', skiprows=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 19, 20], usecols='A:G,I,K,M')
-#df_year_percent = pd.read_excel('data.xlsx', sheet_name='Jahr', skiprows=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 19, 20], usecols='A:F,H,J,L,M')
 df_age_chf = pd.read_excel('data.xlsx', sheet_name='Altersklasse', skiprows=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 19, 20], usecols='A:G,I,K,M,O,Q')
-#df_age_percent = pd.read_excel('data.xlsx', sheet_name='Altersklasse', skiprows=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 19, 20], usecols='A:F,H,J,L,N,P,R')
 df_income_chf = pd.read_excel('data.xlsx', sheet_name='Einkommen', skiprows=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 19, 20], usecols='A:G,I,K,M,O')
-#df_income_percent = pd.read_excel('data.xlsx', sheet_name='Einkommen', skiprows=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 19, 20], usecols='A:F,H,J,L,N,P')
 df_type_chf = pd.read_excel('data.xlsx', sheet_name='Haushaltstyp', skiprows=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 19, 20], usecols='A:G,I,K,M,O,Q')
-#df_type_percent = pd.read_excel('data.xlsx', sheet_name='Haushaltstyp', skiprows=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 19, 20], usecols= 'A:F,H,J,L,N,P,R')
 
 #Die Zellenbeschreibungen sind nicht alle in der ersten Spalte, sondern pro Ebene eins eingerückt.
 #Dies wird hier bereinigt und damit man die Info zur Ebene nicht verliert eine zusätzliche Spalte 'Ebene' eingefügt
@@ -44,7 +40,7 @@ df_age_chf = clean_data(df_age_chf, 'Altersklasse')
 df_income_chf = clean_data(df_income_chf, 'Einkommensklasse')
 df_type_chf = clean_data(df_type_chf, 'Haushaltstyp')
 
-"""
+
 #Aufgabe 7b
 df_age_fig1 = df_age_chf[df_age_chf['Kategorie'] == '61: Gesundheitsausgaben']
 fig1 = px.scatter(df_age_fig1, x='Altersklasse', y='CHF')
@@ -54,7 +50,7 @@ selected_categories = ['5111: Brot und Getreideprodukte', '5112: Fleisch']
 df_age_fig2 = df_age_chf[df_age_chf['Kategorie'].isin(selected_categories)]
 fig2 = px.bar(df_age_fig2, x='Altersklasse', y='CHF', color='Kategorie', barmode='group')
 fig2.show()
-"""
+
 
 #Aufgabe 8
 app = Dash (__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
