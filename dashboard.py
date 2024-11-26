@@ -42,14 +42,24 @@ df_age_chf = clean_data(df_age_chf, 'Altersklasse')
 df_income_chf = clean_data(df_income_chf, 'Einkommensklasse')
 df_type_chf = clean_data(df_type_chf, 'Haushaltstyp')
 
-print(df_age_chf['Kategorie'])
+#Für die Checklisterstellung kann ein beliebiger df von oben verwendet werden, da die Kategorie bei allen gleich ist
+checklist_values = df_year_chf['Kategorie'].tolist()[1:] #Grund für Slicing: Bruttoeinkommen ausschliessen (ist der erste Wert), da es eig keine Kategorie ist
 
-"""
+
 app.layout = html.Div([html.H1("Dashboard Haushaltsausgaben"),
-    dbc.Col
-
+    dbc.Row([
+        dbc.Col([dcc.Checklist(checklist_values, id='checklist')], width=3),
+        dbc.Col([dcc.Graph(id='testgraph')], width=9)
+    ])    
 ])
+
+@callback(Output('testgraph', 'figure'), Input('checklist', 'value'))
+
+def update_graph(chosen_categories):
+    df_graph = df_age_chf[df_age_chf['Kategorie'].isin(chosen_categories)]
+    graph = px.bar(df_graph, x='Altersklasse', y='CHF', color='Kategorie', barmode='group')
+    graph.update_layout()
+    return graph
 
 if __name__ == '__main__':
     app.run_server(debug=False)
-"""
