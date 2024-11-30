@@ -8,43 +8,61 @@ app = Dash (__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 rows_to_skip= list(range(0,13)) + [14,15,16,18,19,20] + list(range(553,583))
 df_year_chf = pd.read_excel('data.xlsx', sheet_name='Jahr', skiprows=rows_to_skip, usecols='A:G,I,K,M')
-df_age_chf = pd.read_excel('data.xlsx', sheet_name='Altersklasse', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q')
-df_income_chf = pd.read_excel('data.xlsx', sheet_name='Einkommen', skiprows=rows_to_skip, usecols='A:G,I,K,M,O')
-df_type_chf = pd.read_excel('data.xlsx', sheet_name='Haushaltstyp', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q')
+#df_age_chf = pd.read_excel('data.xlsx', sheet_name='Altersklasse', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q')
+#df_income_chf = pd.read_excel('data.xlsx', sheet_name='Einkommen', skiprows=rows_to_skip, usecols='A:G,I,K,M,O')
+#df_type_chf = pd.read_excel('data.xlsx', sheet_name='Haushaltstyp', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q')
+
+
 
 #Die Zellenbeschreibungen sind nicht alle in der ersten Spalte, sondern pro Ebene eins eingerückt.
 #Dies wird hier bereinigt und damit man die Info zur Ebene nicht verliert eine zusätzliche Spalte 'Ebene' eingefügt
 def clean_data(dataframe, columnnames):
+    data={}
     dataframe.rename(columns={dataframe.columns[0]: 'Kategorie', dataframe.columns[5]: 'Ebene'}, inplace= True)
     dataframe['Ebene'] = dataframe['Ebene'].astype(object) #damit der datatype stimmt
     for index, row in dataframe.iterrows():
         if pd.notna(row['Kategorie']):
             dataframe.loc[index, 'Ebene'] = '1'
+            rowkey_level1 = row['Kategorie']
+            data[rowkey_level1] = {}
         if pd.notna(row['Unnamed: 1']):
             dataframe.loc[index, 'Kategorie'] = row['Unnamed: 1']
             dataframe.loc[index, 'Ebene'] = '2'
+            rowkey_level2 = row['Unnamed: 1']
+            data[rowkey_level1][rowkey_level2] = {}
         if pd.notna(row['Unnamed: 2']):
             dataframe.loc[index, 'Kategorie'] = row['Unnamed: 2']
             dataframe.loc[index, 'Ebene'] = '3'
+            rowkey_level3 = row['Unnamed: 2']
+            data[rowkey_level1][rowkey_level2][rowkey_level3] = {}
         if pd.notna(row['Unnamed: 3']):
             dataframe.loc[index, 'Kategorie'] = row['Unnamed: 3']
             dataframe.loc[index, 'Ebene'] = '4'
+            rowkey_level4 = row['Unnamed: 3']
+            data[rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4] = {}
         if pd.notna(row['Unnamed: 4']):
             dataframe.loc[index, 'Kategorie'] = row['Unnamed: 4']
             dataframe.loc[index, 'Ebene'] = '5'
+            rowkey_level5 = row['Unnamed: 4']
+            data[rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4][rowkey_level5] = {}
 
     dataframe.drop(['Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4'], axis=1 , inplace=True)
     dataframe_long = dataframe.melt(id_vars=['Kategorie', 'Ebene'], var_name=columnnames, value_name='CHF') #Hier wird der df in das Long-Format geändert, da man so viel einfacher Diagramme mit plotly erstellen kann.
-    return dataframe_long
+    return data
 
-df_year_chf = clean_data(df_year_chf, 'Jahr')
-df_age_chf = clean_data(df_age_chf, 'Altersklasse')
-df_income_chf = clean_data(df_income_chf, 'Einkommensklasse')
-df_type_chf = clean_data(df_type_chf, 'Haushaltstyp')
 
-#Für die Checklisterstellung kann ein beliebiger df von oben verwendet werden, da die Kategorie bei allen gleich ist
-checklist_values = df_year_chf['Kategorie'].tolist()[1:] #Grund für Slicing: Bruttoeinkommen ausschliessen (ist der erste Wert), da es eig keine Kategorie ist
+data = clean_data(df_year_chf, 'Jahr')
+print(data['80: Prämien für die Lebensversicherung'])
 
+#df_year_chf = clean_data(df_year_chf, 'Jahr')
+#df_age_chf = clean_data(df_age_chf, 'Altersklasse')
+#df_income_chf = clean_data(df_income_chf, 'Einkommensklasse')
+#df_type_chf = clean_data(df_type_chf, 'Haushaltstyp')
+
+#Für die Checklisterstellung kann ein beliebiger df von oben verwendet werden, da die Kategorie bei allen gleich ist.
+checklist_values = df_year_chf['Kategorie'].tolist()[1:] #Grund für Slicing: Bruttoeinkommen ausschliessen (ist der erste Wert), da es eig keine Kategorie ist.
+
+"""
 
 app.layout = html.Div([html.H1("Dashboard Haushaltsausgaben"),
 dbc.Tabs([
@@ -62,7 +80,11 @@ dbc.Tabs([
     ]),
     dbc.Tab(label='Nach Einkommen', tab_id='tab_income', children=[
         dbc.Row([
-            dbc.Col([dcc.Checklist(checklist_values, id='checklist_income')], width=3),
+            dbc.Col([html.Ul([
+                html.Li([
+                    dcc.Input(type='checkbox')
+                ])
+            ])], width=3),
             dbc.Col([dcc.Graph(id='graph_income')], width=9)
         ])
     ]),
@@ -109,3 +131,4 @@ def update_graph_type(chosen_categories):
 
 if __name__ == '__main__':
     app.run_server(debug=False)
+"""
