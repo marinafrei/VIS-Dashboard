@@ -19,7 +19,10 @@ def clean_data(dataframe, columnnames):
     dataframe['Ebene'] = dataframe['Ebene'].astype(object) #damit der datatype stimmt
     for index, row in dataframe.iterrows():
         if pd.notna(row['Kategorie']):
-            dataframe.loc[index, 'Ebene'] = '1'
+            if row['Kategorie'] == 'Bruttoeinkommen':
+                dataframe.loc[index, 'Ebene'] = '0'
+            else:
+                dataframe.loc[index, 'Ebene'] = '1'
         if pd.notna(row['Unnamed: 1']):
             dataframe.loc[index, 'Kategorie'] = row['Unnamed: 1']
             dataframe.loc[index, 'Ebene'] = '2'
@@ -43,7 +46,7 @@ df_income_chf = clean_data(df_income_chf, 'Einkommensklasse')
 df_type_chf = clean_data(df_type_chf, 'Haushaltstyp')
 
 #Für die Checklisterstellung kann ein beliebiger df von oben verwendet werden, da die Kategorie bei allen gleich ist
-checklist_values = df_year_chf['Kategorie'].tolist()[1:] #Grund für Slicing: Bruttoeinkommen ausschliessen (ist der erste Wert), da es eig keine Kategorie ist
+checklist_values = df_year_chf['Kategorie'].tolist() #Grund für Slicing: Bruttoeinkommen ausschliessen (ist der erste Wert), da es eig keine Kategorie ist
 
 
 app.layout = html.Div([html.H1("Dashboard Haushaltsausgaben"),
