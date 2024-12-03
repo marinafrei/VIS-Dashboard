@@ -1,4 +1,4 @@
-from dash import Dash, dcc, html, Input, Output, callback
+from dash import Dash, dcc, html, Input, Output, callback, MATCH, State
 import plotly.express as px
 import numpy as np
 import pandas as pd
@@ -69,13 +69,47 @@ for index, row in df_year_chf.iterrows():
 #Für die Checklisterstellung kann ein beliebiger df von oben verwendet werden, da die Kategorie bei allen gleich ist.
 checklist_values = df_year_chf['Kategorie'].tolist()[1:] #Grund für Slicing: Bruttoeinkommen ausschliessen (ist der erste Wert), da es eig keine Kategorie ist.
 
-"""
+def generate_checklist(data, level=0):
+    """
+    Erzeugt rekursiv eine verschachtelte Checkliste aus einer Datenstruktur.
+    """
+    checklists = []
+    for key, value in data.items():
+        if isinstance(value, dict):  # Verschachtelte Aufgaben
+            checklists.append(
+                html.Div([
+                    dcc.Checklist(
+                        id={"type": "checklist", "level": level, "key": key},
+                        options=[{"label": key, "value": key}],
+                        value=[],
+                        labelStyle={"display": "block"},
+                    ),
+                    html.Div(
+                        generate_checklist(value, level=level + 1),
+                        style={"margin-left": "20px"}
+                    ),
+                ])
+            )
+        elif isinstance(value, list):  # Endebene der Checkliste
+            checklists.append(
+                html.Div([
+                    dcc.Checklist(
+                        id={"type": "checklist", "level": level, "key": key},
+                        options=[{"label": item, "value": item} for item in value],
+                        value=[],
+                        labelStyle={"display": "block"},
+                    )
+                ], style={"margin-left": "20px"})
+            )
+    return checklists
+
+
 
 app.layout = html.Div([html.H1("Dashboard Haushaltsausgaben"),
 dbc.Tabs([
     dbc.Tab(label='Nach Jahr', tab_id='tab_year', children=[
        dbc.Row([
-           dbc.Col([dcc.Checklist(checklist_values, id='checklist_year')], width=3),
+           dbc.Col([html.Div(generate_checklist(categories_data))], width=3),
            dbc.Col([dcc.Graph(id='graph_year')], width=9)
        ]) 
     ]),
@@ -104,7 +138,9 @@ dbc.Tabs([
 ])  
 ])
 
-@callback(Output('graph_year', 'figure'), Input('checklist_year', 'value'))
+@callback(Output('graph_year', 'figure'), 
+          Input({'type': 'checklist', 'level': MATCH, 'key': MATCH}, 'value'))
+
 
 def update_graph_year(chosen_categories):
     df_graph = df_year_chf[df_year_chf['Kategorie'].isin(chosen_categories)]
@@ -138,4 +174,3 @@ def update_graph_type(chosen_categories):
 
 if __name__ == '__main__':
     app.run_server(debug=False)
-"""
