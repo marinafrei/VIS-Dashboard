@@ -20,7 +20,10 @@ def clean_data(dataframe, columnnames):
     dataframe['Ebene'] = dataframe['Ebene'].astype(object) #damit der datatype stimmt
     for index, row in dataframe.iterrows():
         if pd.notna(row['Kategorie']):
-            dataframe.loc[index, 'Ebene'] = '1'
+            if row['Kategorie'] == 'Bruttoeinkommen':
+                dataframe.loc[index, 'Ebene'] = '0'
+            else:
+                dataframe.loc[index, 'Ebene'] = '1'
         if pd.notna(row['Unnamed: 1']):
             dataframe.loc[index, 'Kategorie'] = row['Unnamed: 1']
             dataframe.loc[index, 'Ebene'] = '2'
@@ -47,27 +50,30 @@ df_type_chf = clean_data(df_type_chf, 'Haushaltstyp')
 # Erzeugen eines dict mit den Kategorien >> wird für die Checkliste benötigt
 # Dabei kann ein beliebiger dict von oben verwendet werden, da die Kategorien bei allen gleich sind
 categories_data = {}
-for index, row in df_year_chf.iterrows():
-    if df_year_chf.loc[index, 'Ebene'] == '1':
+for index, row in df_year_chf.head(100).iterrows():
+    if row['Ebene'] == '0':
+        rowkey_level0 = row['Kategorie']
+        categories_data[rowkey_level0] = {}
+    if row['Ebene'] == '1':
         rowkey_level1 = row['Kategorie']
-        categories_data[rowkey_level1] = {}
-    if df_year_chf.loc[index, 'Ebene'] == '2':
+        categories_data[rowkey_level0][rowkey_level1] = {}
+    if row['Ebene'] == '2':
         rowkey_level2 = row['Kategorie']
-        categories_data[rowkey_level1][rowkey_level2] = {}
-    if df_year_chf.loc[index, 'Ebene'] == '3':
+        categories_data[rowkey_level0][rowkey_level1][rowkey_level2] = {}
+    if row['Ebene'] == '3':
         rowkey_level3 = row['Kategorie']
-        categories_data[rowkey_level1][rowkey_level2][rowkey_level3] = {}
-    if df_year_chf.loc[index, 'Ebene'] == '4':
+        categories_data[rowkey_level0][rowkey_level1][rowkey_level2][rowkey_level3] = {}
+    if row['Ebene'] == '4':
         rowkey_level4 = row['Kategorie']
-        categories_data[rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4] = {}
-    if df_year_chf.loc[index, 'Ebene'] == '5':
+        categories_data[rowkey_level0][rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4] = {}
+    if row['Ebene'] == '5':
         rowkey_level5 = row['Kategorie']
-        categories_data[rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4][rowkey_level5] = {}
+        categories_data[rowkey_level0][rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4][rowkey_level5] = {}
 
-    
 
 #Für die Checklisterstellung kann ein beliebiger df von oben verwendet werden, da die Kategorie bei allen gleich ist.
-checklist_values = df_year_chf['Kategorie'].tolist()[1:] #Grund für Slicing: Bruttoeinkommen ausschliessen (ist der erste Wert), da es eig keine Kategorie ist.
+checklist_values = df_year_chf['Kategorie'].tolist()
+print(checklist_values)
 
 def generate_checklist(data, level=0):
     """

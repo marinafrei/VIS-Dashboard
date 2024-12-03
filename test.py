@@ -1,34 +1,81 @@
-from dash import Dash, html, dcc, Input, Output, MATCH, State
+from dash import Dash, dcc, html, Input, Output, callback, MATCH, State
+import plotly.express as px
+import numpy as np
+import pandas as pd
+import dash_bootstrap_components as dbc
 
-# Initialize Dash
-app = Dash(__name__)
+#app = Dash (__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-# Example data structure: 4 levels of nested values
-data = {
-    "Task 1": {
-        "Subtask 1.1": {
-            "Sub-Subtask 1.1.1": ["Item 1.1.1.1", "Item 1.1.1.2"],
-            "Sub-Subtask 1.1.2": ["Item 1.1.2.1"],
-        },
-        "Subtask 1.2": ["Item 1.2.1", "Item 1.2.2"],
-    },
-    "Task 2": {
-        "Subtask 2.1": ["Item 2.1.1"],
-        "Subtask 2.2": {
-            "Sub-Subtask 2.2.1": ["Item 2.2.1.1", "Item 2.2.1.2"]
-        },
-    },
-}
+rows_to_skip= list(range(0,13)) + [14,15,16,18,19,20] + list(range(553,583))
+df_year_chf = pd.read_excel('data.xlsx', sheet_name='Jahr', skiprows=rows_to_skip, usecols='A:G,I,K,M')
+df_age_chf = pd.read_excel('data.xlsx', sheet_name='Altersklasse', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q')
+df_income_chf = pd.read_excel('data.xlsx', sheet_name='Einkommen', skiprows=rows_to_skip, usecols='A:G,I,K,M,O')
+df_type_chf = pd.read_excel('data.xlsx', sheet_name='Haushaltstyp', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q')
 
 
-# Function to generate nested checklists
-def generate_checklist(data, level=0):
-    """
-    Recursively generates a nested checklist from the data structure.
-    """
+#Die Zellenbeschreibungen sind nicht alle in der ersten Spalte, sondern pro Ebene eins eingerückt.
+#Dies wird hier bereinigt und damit man die Info zur Ebene nicht verliert eine zusätzliche Spalte 'Ebene' eingefügt
+def clean_data(dataframe, columnnames):
+    dataframe.rename(columns={dataframe.columns[0]: 'Kategorie', dataframe.columns[5]: 'Ebene'}, inplace= True)
+    dataframe['Ebene'] = dataframe['Ebene'].astype(object) #damit der datatype stimmt
+    for index, row in dataframe.iterrows():
+        if pd.notna(row['Kategorie']):
+            dataframe.loc[index, 'Ebene'] = '1'
+        if pd.notna(row['Unnamed: 1']):
+            dataframe.loc[index, 'Kategorie'] = row['Unnamed: 1']
+            dataframe.loc[index, 'Ebene'] = '2'
+        if pd.notna(row['Unnamed: 2']):
+            dataframe.loc[index, 'Kategorie'] = row['Unnamed: 2']
+            dataframe.loc[index, 'Ebene'] = '3'
+        if pd.notna(row['Unnamed: 3']):
+            dataframe.loc[index, 'Kategorie'] = row['Unnamed: 3']
+            dataframe.loc[index, 'Ebene'] = '4'
+        if pd.notna(row['Unnamed: 4']):
+            dataframe.loc[index, 'Kategorie'] = row['Unnamed: 4']
+            dataframe.loc[index, 'Ebene'] = '5'
+        
+
+    dataframe.drop(['Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4'], axis=1 , inplace=True)
+    dataframe_long = dataframe.melt(id_vars=['Kategorie', 'Ebene'], var_name=columnnames, value_name='CHF') #Hier wird der df in das Long-Format geändert, da man so viel einfacher Diagramme mit plotly erstellen kann.
+    return dataframe_long
+
+
+df_year_chf = clean_data(df_year_chf, 'Jahr')
+df_age_chf = clean_data(df_age_chf, 'Altersklasse')
+df_income_chf = clean_data(df_income_chf, 'Einkommensklasse')
+df_type_chf = clean_data(df_type_chf, 'Haushaltstyp')
+
+# Erzeugen eines dict mit den Kategorien >> wird für die Checkliste benötigt
+# Dabei kann ein beliebiger dict von oben verwendet werden, da die Kategorien bei allen gleich sind
+categories_data = {}
+for index, row in df_year_chf.iterrows():
+    if row['Ebene'] == '1' and row['Kategorie'] != 'Bruttoeinkommen':
+        rowkey_level1 = row['Kategorie']
+        categories_data[rowkey_level1] = {}
+    if row['Ebene'] == '2':
+        rowkey_level2 = row['Kategorie']
+        categories_data[rowkey_level1][rowkey_level2] = {}
+    if row['Ebene'] == '3':
+        rowkey_level3 = row['Kategorie']
+        categories_data[rowkey_level1][rowkey_level2][rowkey_level3] = {}
+    if row['Ebene'] == '4':
+        rowkey_level4 = row['Kategorie']
+        categories_data[rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4] = {}
+    if row['Ebene'] == '5':
+        rowkey_level5 = row['Kategorie']
+        categories_data[rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4][rowkey_level5] = {}
+
+
+
+#Für die Checklisterstellung kann ein beliebiger df von oben verwendet werden, da die Kategorie bei allen gleich ist.
+checklist_values = df_year_chf['Kategorie'].tolist()[1:] #Grund für Slicing: Bruttoeinkommen ausschliessen (ist der erste Wert), da es eig keine Kategorie ist.
+
+
+def generate_checklist(data, level=0):    
+    #Erzeugt rekursiv eine verschachtelte Checkliste aus einer Datenstruktur.
     checklists = []
     for key, value in data.items():
-        if isinstance(value, dict):  # Nested tasks
+        if isinstance(value, dict):  # Verschachtelte Aufgaben
             checklists.append(
                 html.Div([
                     dcc.Checklist(
@@ -41,10 +88,9 @@ def generate_checklist(data, level=0):
                         generate_checklist(value, level=level + 1),
                         style={"margin-left": "20px"}
                     ),
-                    html.Div(id={"type": "output", "level": level, "key": key}, style={"margin-left": "20px"}),
                 ])
             )
-        elif isinstance(value, list):  # Leaf level of the checklist
+        elif isinstance(value, list):  # Endebene der Checkliste
             checklists.append(
                 html.Div([
                     dcc.Checklist(
@@ -52,33 +98,76 @@ def generate_checklist(data, level=0):
                         options=[{"label": item, "value": item} for item in value],
                         value=[],
                         labelStyle={"display": "block"},
-                    ),
-                    html.Div(id={"type": "output", "level": level, "key": key}, style={"margin-left": "20px"}),
-                ])
+                    )
+                ], style={"margin-left": "20px"})
             )
     return checklists
 
+"""
 
-# Layout with nested checklist
-app.layout = html.Div([
-    html.H1("Nested Checklist"),
-    html.Div(generate_checklist(data)),
+app.layout = html.Div([html.H1("Dashboard Haushaltsausgaben"),
+dbc.Tabs([
+    dbc.Tab(label='Nach Jahr', tab_id='tab_year', children=[
+       dbc.Row([
+           dbc.Col([html.Div(generate_checklist(categories_data))], width=3),
+           dbc.Col([dcc.Graph(id='graph_year')], width=9)
+       ]) 
+    ]),
+    dbc.Tab(label='Nach Altersklasse', tab_id='tab_age', children=[
+        dbc.Row([
+            dbc.Col([dcc.Checklist(checklist_values, id='checklist_age')], width=3),
+            dbc.Col([dcc.Graph(id='graph_age')], width=9)
+        ])
+    ]),
+    dbc.Tab(label='Nach Einkommen', tab_id='tab_income', children=[
+        dbc.Row([
+            dbc.Col([dcc.Checklist(checklist_values, id='checklist_income')], width=3),
+            dbc.Col([dcc.Graph(id='graph_income')], width=9)
+        ])
+    ]),
+    dbc.Tab(label='Nach Haushaltstyp', tab_id='tab_type', children=[
+        dbc.Row([
+            dbc.Col([dcc.Checklist(checklist_values, id='checklist_type')], width=3),
+            dbc.Col([dcc.Graph(id='graph_type')], width=9)
+        ])
+    ])
+])  
 ])
 
-
-# Dynamic callback for all checklists
-@app.callback(
-    Output({"type": "output", "level": MATCH, "key": MATCH}, "children"),
-    Input({"type": "checklist", "level": MATCH, "key": MATCH}, "value"),
-    State({"type": "checklist", "level": MATCH, "key": MATCH}, "id"),
-)
-def update_checked_values(checked_values, checklist_id):
-    """
-    Updates the output based on the selected values from each checklist.
-    """
-    return f"Selected in {checklist_id['key']} (Level {checklist_id['level']}): {checked_values}"
+@callback(Output('graph_year', 'figure'), 
+          Input({'type': 'checklist', 'level': MATCH, 'key': MATCH}, 'value'))
 
 
-# Run the app
-if __name__ == "__main__":
-    app.run_server(debug=True)
+def update_graph_year(chosen_categories):
+    df_graph = df_year_chf[df_year_chf['Kategorie'].isin(chosen_categories)]
+    graph = px.line(df_graph, x='Jahr', y='CHF', color='Kategorie')
+    graph.update_layout()
+    return graph
+
+@callback(Output('graph_age', 'figure'), Input('checklist_age', 'value'))
+
+def update_graph_age(chosen_categories):
+    df_graph = df_age_chf[df_age_chf['Kategorie'].isin(chosen_categories)]
+    graph = px.bar(df_graph, x='Altersklasse', y='CHF', color='Kategorie', barmode='group')
+    graph.update_layout()
+    return graph
+
+@callback(Output('graph_income', 'figure'), Input('checklist_income', 'value'))
+
+def update_graph_income(chosen_categories):
+    df_graph = df_income_chf[df_income_chf['Kategorie'].isin(chosen_categories)]
+    graph = px.bar(df_graph, x='Einkommensklasse', y='CHF', color='Kategorie', barmode='group')
+    graph.update_layout()
+    return graph
+
+@callback(Output('graph_type', 'figure'), Input('checklist_type', 'value'))
+
+def update_graph_type(chosen_categories):
+    df_graph = df_type_chf[df_type_chf['Kategorie'].isin(chosen_categories)]
+    graph = px.bar(df_graph, x='Haushaltstyp', y='CHF', color='Kategorie', barmode='group')
+    graph.update_layout()
+    return graph
+
+if __name__ == '__main__':
+    app.run_server(debug=False)
+"""
