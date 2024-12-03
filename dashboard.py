@@ -47,38 +47,42 @@ df_age_chf = clean_data(df_age_chf, 'Altersklasse')
 df_income_chf = clean_data(df_income_chf, 'Einkommensklasse')
 df_type_chf = clean_data(df_type_chf, 'Haushaltstyp')
 
+
 # Erzeugen eines dict mit den Kategorien >> wird für die Checkliste benötigt
 # Dabei kann ein beliebiger dict von oben verwendet werden, da die Kategorien bei allen gleich sind
 categories_data = {}
-for index, row in df_year_chf.head(100).iterrows():
+for index, row in df_year_chf.iterrows():
+    #Da die Kategorien im df im Long-Format mehrmals vorkommen, wird hier gestoppt, wenn 'Bruttoeinkommen' das zweite Mal vorkommt. Denn dann ist die Liste bereits komplett.
     if row['Ebene'] == '0':
-        rowkey_level0 = row['Kategorie']
-        categories_data[rowkey_level0] = {}
-    if row['Ebene'] == '1':
+        if len(categories_data) == 0:            
+            rowkey_level0 = row['Kategorie']
+            categories_data[rowkey_level0] = {}
+        else:
+            break
+    elif row['Ebene'] == '1':
         rowkey_level1 = row['Kategorie']
         categories_data[rowkey_level0][rowkey_level1] = {}
-    if row['Ebene'] == '2':
+    elif row['Ebene'] == '2':
         rowkey_level2 = row['Kategorie']
         categories_data[rowkey_level0][rowkey_level1][rowkey_level2] = {}
-    if row['Ebene'] == '3':
+    elif row['Ebene'] == '3':
         rowkey_level3 = row['Kategorie']
         categories_data[rowkey_level0][rowkey_level1][rowkey_level2][rowkey_level3] = {}
-    if row['Ebene'] == '4':
+    elif row['Ebene'] == '4':
         rowkey_level4 = row['Kategorie']
         categories_data[rowkey_level0][rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4] = {}
-    if row['Ebene'] == '5':
+    elif row['Ebene'] == '5':
         rowkey_level5 = row['Kategorie']
         categories_data[rowkey_level0][rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4][rowkey_level5] = {}
 
 
 #Für die Checklisterstellung kann ein beliebiger df von oben verwendet werden, da die Kategorie bei allen gleich ist.
+#Da der df in das Long-Format kovertiert wurde, sind die Kategorien mehrfach vorhanden.
 checklist_values = df_year_chf['Kategorie'].tolist()
-print(checklist_values)
+
 
 def generate_checklist(data, level=0):
-    """
-    Erzeugt rekursiv eine verschachtelte Checkliste aus einer Datenstruktur.
-    """
+    #Erzeugt rekursiv eine verschachtelte Checkliste aus einer Datenstruktur.
     checklists = []
     for key, value in data.items():
         if isinstance(value, dict):  # Verschachtelte Aufgaben
@@ -108,8 +112,6 @@ def generate_checklist(data, level=0):
                 ], style={"margin-left": "20px"})
             )
     return checklists
-
-
 
 app.layout = html.Div([html.H1("Dashboard Haushaltsausgaben"),
 dbc.Tabs([
@@ -144,15 +146,16 @@ dbc.Tabs([
 ])  
 ])
 
+"""
 @callback(Output('graph_year', 'figure'), 
           Input({'type': 'checklist', 'level': MATCH, 'key': MATCH}, 'value'))
-
 
 def update_graph_year(chosen_categories):
     df_graph = df_year_chf[df_year_chf['Kategorie'].isin(chosen_categories)]
     graph = px.line(df_graph, x='Jahr', y='CHF', color='Kategorie')
     graph.update_layout()
     return graph
+"""
 
 @callback(Output('graph_age', 'figure'), Input('checklist_age', 'value'))
 
