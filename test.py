@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import dash_bootstrap_components as dbc
 
-app = Dash (__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+#app = Dash (__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 rows_to_skip= list(range(0,13)) + [14,15,16,18,19,20] + list(range(553,583))
 df_year_chf = pd.read_excel('data.xlsx', sheet_name='Jahr', skiprows=rows_to_skip, usecols='A:G,I,K,M')
@@ -20,10 +20,7 @@ def clean_data(dataframe, columnnames):
     dataframe['Ebene'] = dataframe['Ebene'].astype(object) #damit der datatype stimmt
     for index, row in dataframe.iterrows():
         if pd.notna(row['Kategorie']):
-            if row['Kategorie'] == 'Bruttoeinkommen':
-                dataframe.loc[index, 'Ebene'] = '0'
-            else:
-                dataframe.loc[index, 'Ebene'] = '1'
+            dataframe.loc[index, 'Ebene'] = '1'
         if pd.notna(row['Unnamed: 1']):
             dataframe.loc[index, 'Kategorie'] = row['Unnamed: 1']
             dataframe.loc[index, 'Ebene'] = '2'
@@ -36,6 +33,7 @@ def clean_data(dataframe, columnnames):
         if pd.notna(row['Unnamed: 4']):
             dataframe.loc[index, 'Kategorie'] = row['Unnamed: 4']
             dataframe.loc[index, 'Ebene'] = '5'
+        
 
     dataframe.drop(['Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4'], axis=1 , inplace=True)
     dataframe_long = dataframe.melt(id_vars=['Kategorie', 'Ebene'], var_name=columnnames, value_name='CHF') #Hier wird der df in das Long-Format geändert, da man so viel einfacher Diagramme mit plotly erstellen kann.
@@ -47,46 +45,33 @@ df_age_chf = clean_data(df_age_chf, 'Altersklasse')
 df_income_chf = clean_data(df_income_chf, 'Einkommensklasse')
 df_type_chf = clean_data(df_type_chf, 'Haushaltstyp')
 
-<<<<<<< HEAD
-#Für die Checklisterstellung kann ein beliebiger df von oben verwendet werden, da die Kategorie bei allen gleich ist
-checklist_values = df_year_chf['Kategorie'].tolist() #Grund für Slicing: Bruttoeinkommen ausschliessen (ist der erste Wert), da es eig keine Kategorie ist
-=======
->>>>>>> develop
-
 # Erzeugen eines dict mit den Kategorien >> wird für die Checkliste benötigt
 # Dabei kann ein beliebiger dict von oben verwendet werden, da die Kategorien bei allen gleich sind
 categories_data = {}
 for index, row in df_year_chf.iterrows():
-    #Da die Kategorien im df im Long-Format mehrmals vorkommen, wird hier gestoppt, wenn 'Bruttoeinkommen' das zweite Mal vorkommt. Denn dann ist die Liste bereits komplett.
-    if row['Ebene'] == '0':
-        if len(categories_data) == 0:            
-            rowkey_level0 = row['Kategorie']
-            categories_data[rowkey_level0] = {}
-        else:
-            break
-    elif row['Ebene'] == '1':
+    if row['Ebene'] == '1' and row['Kategorie'] != 'Bruttoeinkommen':
         rowkey_level1 = row['Kategorie']
-        categories_data[rowkey_level0][rowkey_level1] = {}
-    elif row['Ebene'] == '2':
+        categories_data[rowkey_level1] = {}
+    if row['Ebene'] == '2':
         rowkey_level2 = row['Kategorie']
-        categories_data[rowkey_level0][rowkey_level1][rowkey_level2] = {}
-    elif row['Ebene'] == '3':
+        categories_data[rowkey_level1][rowkey_level2] = {}
+    if row['Ebene'] == '3':
         rowkey_level3 = row['Kategorie']
-        categories_data[rowkey_level0][rowkey_level1][rowkey_level2][rowkey_level3] = {}
-    elif row['Ebene'] == '4':
+        categories_data[rowkey_level1][rowkey_level2][rowkey_level3] = {}
+    if row['Ebene'] == '4':
         rowkey_level4 = row['Kategorie']
-        categories_data[rowkey_level0][rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4] = {}
-    elif row['Ebene'] == '5':
+        categories_data[rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4] = {}
+    if row['Ebene'] == '5':
         rowkey_level5 = row['Kategorie']
-        categories_data[rowkey_level0][rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4][rowkey_level5] = {}
+        categories_data[rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4][rowkey_level5] = {}
+
 
 
 #Für die Checklisterstellung kann ein beliebiger df von oben verwendet werden, da die Kategorie bei allen gleich ist.
-#Da der df in das Long-Format kovertiert wurde, sind die Kategorien mehrfach vorhanden.
-checklist_values = df_year_chf['Kategorie'].tolist()
+checklist_values = df_year_chf['Kategorie'].tolist()[1:] #Grund für Slicing: Bruttoeinkommen ausschliessen (ist der erste Wert), da es eig keine Kategorie ist.
 
 
-def generate_checklist(data, level=0):
+def generate_checklist(data, level=0):    
     #Erzeugt rekursiv eine verschachtelte Checkliste aus einer Datenstruktur.
     checklists = []
     for key, value in data.items():
@@ -118,6 +103,8 @@ def generate_checklist(data, level=0):
             )
     return checklists
 
+"""
+
 app.layout = html.Div([html.H1("Dashboard Haushaltsausgaben"),
 dbc.Tabs([
     dbc.Tab(label='Nach Jahr', tab_id='tab_year', children=[
@@ -147,17 +134,15 @@ dbc.Tabs([
 ])  
 ])
 
-
-"""
 @callback(Output('graph_year', 'figure'), 
           Input({'type': 'checklist', 'level': MATCH, 'key': MATCH}, 'value'))
+
 
 def update_graph_year(chosen_categories):
     df_graph = df_year_chf[df_year_chf['Kategorie'].isin(chosen_categories)]
     graph = px.line(df_graph, x='Jahr', y='CHF', color='Kategorie')
     graph.update_layout()
     return graph
-"""
 
 @callback(Output('graph_age', 'figure'), Input('checklist_age', 'value'))
 
@@ -185,3 +170,4 @@ def update_graph_type(chosen_categories):
 
 if __name__ == '__main__':
     app.run_server(debug=False)
+"""
