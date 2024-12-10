@@ -129,11 +129,7 @@ dbc.Tabs([
     ]),
     dbc.Tab(label='Nach Einkommen', tab_id='tab_income', children=[
         dbc.Row([
-            dbc.Col([html.Ul([
-                html.Li([
-                    dcc.Input(type='checkbox')
-                ])
-            ])], width=3),
+            dbc.Col([dcc.Checklist(checklist_values, id='checklist_income')], width=3),
             dbc.Col([dcc.Graph(id='graph_income')], width=9)
         ])
     ]),
@@ -145,6 +141,7 @@ dbc.Tabs([
     ])
 ])  
 ])
+
 
 """
 @callback(Output('graph_year', 'figure'), 
