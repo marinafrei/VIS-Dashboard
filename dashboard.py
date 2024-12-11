@@ -76,13 +76,9 @@ for index, row in df_year_chf.iterrows():
         categories_data[rowkey_level0][rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4][rowkey_level5] = {}
 
 
-#Für die Checklisterstellung kann ein beliebiger df von oben verwendet werden, da die Kategorie bei allen gleich ist.
-#Da der df in das Long-Format kovertiert wurde, sind die Kategorien mehrfach vorhanden.
-checklist_values = df_year_chf['Kategorie'].tolist()
-
 
 def generate_checklist(data, level=0):
-    #Erzeugt rekursiv eine verschachtelte Checkliste aus einer Datenstruktur.
+    #Erzeugt rekursiv eine verschachtelte Checkliste.
     checklists = []
     for key, value in data.items():
         if isinstance(value, dict):  # Verschachtelte Aufgaben
