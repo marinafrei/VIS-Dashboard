@@ -115,75 +115,56 @@ def generate_checklist(data, level=0):
 
 nested_checklist = generate_checklist(categories_data)
 
-app.layout = html.Div([html.H1("Dashboard Haushaltsausgaben"),
-dbc.Tabs([
-    dbc.Tab(label='Nach Jahr', tab_id='tab_year', children=[
-       dbc.Row([
-           dbc.Col([html.Div(nested_checklist)], width=3),
-           dbc.Col([dcc.Graph(id='graph_year')], width=9)
-       ]) 
-    ]),
-    dbc.Tab(label='Nach Altersklasse', tab_id='tab_age', children=[
-        dbc.Row([
-            dbc.Col([dcc.Checklist(checklist_values, id='checklist_age')], width=3),
-            dbc.Col([dcc.Graph(id='graph_age')], width=9)
-        ])
-    ]),
-    dbc.Tab(label='Nach Einkommen', tab_id='tab_income', children=[
-        dbc.Row([
-            dbc.Col([dcc.Checklist(checklist_values, id='checklist_income')], width=3),
-            dbc.Col([dcc.Graph(id='graph_income')], width=9)
-        ])
-    ]),
-    dbc.Tab(label='Nach Haushaltstyp', tab_id='tab_type', children=[
-        dbc.Row([
-            dbc.Col([dcc.Checklist(checklist_values, id='checklist_type')], width=3),
-            dbc.Col([dcc.Graph(id='graph_type')], width=9)
-        ])
+app.layout = html.Div([
+    html.H1("Dashboard Haushaltsausgaben"),
+    dbc.Row([
+        dbc.Col([
+            html.H4("Auswahl der Daten"),
+            html.Div(nested_checklist)
+        ], width=3),
+        dbc.Col([
+            dbc.Tabs(id='tabs', active_tab='tab_year', children=[
+                dbc.Tab(label='Nach Jahr', tab_id='tab_year'),
+                dbc.Tab(label='Nach Altersklasse', tab_id='tab_age'),
+                dbc.Tab(label='Nach Einkommen', tab_id='tab_income'),
+                dbc.Tab(label='Nach Haushaltstyp', tab_id='tab_type')
+            ]),
+            dcc.Graph(id='graph-output')
+        ], width=9)
     ])
-])  
 ])
 
 
 
-@callback(Output('graph_year', 'figure'), 
-          Input({'type': 'checklist', 'level': ALL, 'key': ALL}, 'value'))
 
-def update_graph_year(all_checked_values):
+@callback(Output('graph-output', 'figure'), 
+          Input({'type': 'checklist', 'level': ALL, 'key': ALL}, 'value'),
+          Input('tabs', 'active_tab')
+          )
+
+def update_graph_year(all_checked_values, active_tab):
     checked_values = []
     for checklist in all_checked_values:
         if checklist: #Not empty
             for value in checklist:
                 checked_values.append(value)
-    df_graph = df_age_chf[df_age_chf['Kategorie'].isin(checked_values)]
-    graph = px.bar(df_graph, x='Altersklasse', y='CHF', color='Kategorie', barmode='group')
+    
+    if active_tab == 'tab_year':
+        df_graph = df_year_chf[df_year_chf['Kategorie'].isin(checked_values)]
+        graph = px.line(df_graph, x='Jahr', y='CHF', color='Kategorie')
+    elif active_tab == 'tab_age':
+        df_graph = df_age_chf[df_age_chf['Kategorie'].isin(checked_values)]
+        graph = px.bar(df_graph, x='Altersklasse', y='CHF', color='Kategorie', barmode='group') 
+    elif active_tab == 'tab_income':
+        df_graph = df_income_chf[df_income_chf['Kategorie'].isin(checked_values)]
+        graph = px.bar(df_graph, x='Einkommensklasse', y='CHF', color='Kategorie', barmode='group')
+    elif active_tab == 'tab_type':
+        df_graph = df_type_chf[df_type_chf['Kategorie'].isin(checked_values)]
+        graph = px.bar(df_graph, x='Haushaltstyp', y='CHF', color='Kategorie', barmode='group')         
+
     graph.update_layout()
     return graph
 
-
-@callback(Output('graph_age', 'figure'), Input('checklist_age', 'value'))
-
-def update_graph_age(chosen_categories):
-    df_graph = df_age_chf[df_age_chf['Kategorie'].isin(chosen_categories)]
-    graph = px.bar(df_graph, x='Altersklasse', y='CHF', color='Kategorie', barmode='group')
-    graph.update_layout()
-    return graph
-
-@callback(Output('graph_income', 'figure'), Input('checklist_income', 'value'))
-
-def update_graph_income(chosen_categories):
-    df_graph = df_income_chf[df_income_chf['Kategorie'].isin(chosen_categories)]
-    graph = px.bar(df_graph, x='Einkommensklasse', y='CHF', color='Kategorie', barmode='group')
-    graph.update_layout()
-    return graph
-
-@callback(Output('graph_type', 'figure'), Input('checklist_type', 'value'))
-
-def update_graph_type(chosen_categories):
-    df_graph = df_type_chf[df_type_chf['Kategorie'].isin(chosen_categories)]
-    graph = px.bar(df_graph, x='Haushaltstyp', y='CHF', color='Kategorie', barmode='group')
-    graph.update_layout()
-    return graph
 
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(debug=True)
