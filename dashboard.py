@@ -1,4 +1,4 @@
-from dash import Dash, dcc, html, Input, Output, callback, MATCH, State
+from dash import Dash, dcc, html, Input, Output, callback, ALL, State
 import plotly.express as px
 import numpy as np
 import pandas as pd
@@ -113,11 +113,13 @@ def generate_checklist(data, level=0):
             )
     return checklists
 
+nested_checklist = generate_checklist(categories_data)
+
 app.layout = html.Div([html.H1("Dashboard Haushaltsausgaben"),
 dbc.Tabs([
     dbc.Tab(label='Nach Jahr', tab_id='tab_year', children=[
        dbc.Row([
-           dbc.Col([html.Div(generate_checklist(categories_data))], width=3),
+           dbc.Col([html.Div(nested_checklist)], width=3),
            dbc.Col([dcc.Graph(id='graph_year')], width=9)
        ]) 
     ]),
@@ -143,16 +145,21 @@ dbc.Tabs([
 ])
 
 
-"""
-@callback(Output('graph_year', 'figure'), 
-          Input({'type': 'checklist', 'level': MATCH, 'key': MATCH}, 'value'))
 
-def update_graph_year(chosen_categories):
-    df_graph = df_year_chf[df_year_chf['Kategorie'].isin(chosen_categories)]
-    graph = px.line(df_graph, x='Jahr', y='CHF', color='Kategorie')
+@callback(Output('graph_year', 'figure'), 
+          Input({'type': 'checklist', 'level': ALL, 'key': ALL}, 'value'))
+
+def update_graph_year(all_checked_values):
+    checked_values = []
+    for checklist in all_checked_values:
+        if checklist: #Not empty
+            for value in checklist:
+                checked_values.append(value)
+    df_graph = df_age_chf[df_age_chf['Kategorie'].isin(checked_values)]
+    graph = px.bar(df_graph, x='Altersklasse', y='CHF', color='Kategorie', barmode='group')
     graph.update_layout()
     return graph
-"""
+
 
 @callback(Output('graph_age', 'figure'), Input('checklist_age', 'value'))
 
