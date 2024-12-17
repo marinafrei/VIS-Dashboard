@@ -112,7 +112,7 @@ def generate_checklist(data, level=0):
                     html.Div(
                         generate_checklist(value, level=level + 1),
                         id=div_id,  # ID für das darunterliegende Div
-                        style={"margin-left": "20px", "display": "none"}  # Standardmäßig ausgeblendet
+                        style={"margin-left": "20px", "display": "block" if level == 0 else 'none'}  # Standardmäßig ausgeblendet
                     ),
                 ])
             )
@@ -125,7 +125,7 @@ def generate_checklist(data, level=0):
                         value=[],
                         labelStyle={"display": "block"},
                     )
-                ], style={"margin-left": "20px", 'display': 'flex' if level in [0, 1] else 'none'})
+                ], style={"margin-left": "20px", 'display': 'flex'})
             )
     return checklists
 
