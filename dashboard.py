@@ -105,7 +105,7 @@ def generate_checklist(data, level=0):
                             dcc.Checklist(
                                 id={"type": "checklist", "level": level, "key": key},
                                 options=[{"label": key, "value": key}],
-                                value=[],
+                                value=[key] if key == "50: Konsumausgaben" else [], #Konsumausgaben als Default-Wert setzen beim Starten des Dashboard
                                 labelStyle={"display": "block"},
                             )
                         ], style={'display': 'flex'}
