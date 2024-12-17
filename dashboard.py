@@ -84,12 +84,17 @@ def generate_checklist(data, level=0):
         if isinstance(value, dict):  # Verschachtelte Aufgaben
             checklists.append(
                 html.Div([
-                    dcc.Checklist(
-                        id={"type": "checklist", "level": level, "key": key},
-                        options=[{"label": key, "value": key}],
-                        value=[],
-                        labelStyle={"display": "block"},
-                    ),
+                    html.Div(
+                        style={'display': 'flex'},
+                        children = [
+                            dbc.Button('▶', style={'padding': '0px', 'background-color':'transparent', 'border-style': 'none'}),
+                            dcc.Checklist(
+                                id={"type": "checklist", "level": level, "key": key},
+                                options=[{"label": key, "value": key}],
+                                value=[],
+                                labelStyle={"display": "block"},
+                            )
+                    ]),
                     html.Div(
                         generate_checklist(value, level=level + 1),
                         style={"margin-left": "20px"}
@@ -163,4 +168,4 @@ def update_graph_year(all_checked_values, active_tab):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)

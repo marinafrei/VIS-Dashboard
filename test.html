@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verschachtelte Checkliste mit Pfeilen</title>
+    <style>
+        /* Grundlegendes Styling */
+        ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+
+        .checkbox-container {
+            margin: 10px 0;
+        }
+
+        /* Styling für die offene/geschlossene Liste */
+        .nested {
+            display: none;
+        }
+
+        .active {
+            display: block;
+        }
+
+        .toggle-button {
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .arrow {
+            font-size: 18px;
+            transition: transform 0.3s;
+        }
+
+        .arrow-right {
+            transform: rotate(90deg);
+        }
+
+        .arrow-down {
+            transform: rotate(180deg);
+        }
+
+        /* Styling für die Checkbox */
+        .category-checkbox {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Verschachtelte Checkliste mit Pfeilen</h2>
+
+    <ul>
+        <!-- Oberkategorie 1 -->
+        <li>
+            <input type="checkbox" id="category1-checkbox" class="category-checkbox" onclick="toggleCategory(this, 'category1')">
+            <span class="toggle-button" onclick="toggleVisibility('category1')">
+                <span id="arrow1" class="arrow arrow-right">▶</span> Aufgaben 1
+            </span>
+            <ul id="category1" class="nested">
+                <li class="checkbox-container">
+                    <input type="checkbox" id="task1-1">
+                    <label for="task1-1">Unteraufgabe 1.1</label>
+                </li>
+                <li class="checkbox-container">
+                    <input type="checkbox" id="task1-2">
+                    <label for="task1-2">Unteraufgabe 1.2</label>
+                </li>
+                <li class="checkbox-container">
+                    <input type="checkbox" id="task1-3">
+                    <label for="task1-3">Unteraufgabe 1.3</label>
+                </li>
+            </ul>
+        </li>
+
+        <!-- Oberkategorie 2 -->
+        <li>
+            <input type="checkbox" id="category2-checkbox" class="category-checkbox" onclick="toggleCategory(this, 'category2')">
+            <span class="toggle-button" onclick="toggleVisibility('category2')">
+                <span id="arrow2" class="arrow arrow-right">▶</span> Aufgaben 2
+            </span>
+            <ul id="category2" class="nested">
+                <li class="checkbox-container">
+                    <input type="checkbox" id="task2-1">
+                    <label for="task2-1">Unteraufgabe 2.1</label>
+                </li>
+                <li class="checkbox-container">
+                    <input type="checkbox" id="task2-2">
+                    <label for="task2-2">Unteraufgabe 2.2</label>
+                </li>
+                <li class="checkbox-container">
+                    <input type="checkbox" id="task2-3">
+                    <label for="task2-3">Unteraufgabe 2.3</label>
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+    <script>
+        // Funktion zum Umschalten der Sichtbarkeit der Unterkategorien
+        function toggleVisibility(categoryId) {
+            var category = document.getElementById(categoryId);
+            var arrow = document.getElementById('arrow' + categoryId.charAt(categoryId.length - 1));
+
+            if (category.classList.contains('active')) {
+                category.classList.remove('active');
+                arrow.classList.remove('arrow-down');
+                arrow.classList.add('arrow-right');
+            } else {
+                category.classList.add('active');
+                arrow.classList.remove('arrow-right');
+                arrow.classList.add('arrow-down');
+            }
+        }
+
+        // Funktion zum Umschalten der Sichtbarkeit und Kontrolle der Checkboxen der Oberkategorie
+        function toggleCategory(checkbox, categoryId) {
+            var category = document.getElementById(categoryId);
+            var tasks = category.querySelectorAll('input[type="checkbox"]');
+            tasks.forEach(function(task) {
+                task.checked = checkbox.checked;  // Alle Unteraufgaben entsprechend der Oberkategorie markieren
+            });
+        }
+    </script>
+</body>
+</html>
