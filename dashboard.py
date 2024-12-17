@@ -97,7 +97,9 @@ def generate_checklist(data, level=0):
                                     'color': 'black',
                                     'padding': '0px',
                                     'background-color': 'transparent',
-                                    'border-style': 'none'
+                                    'border-style': 'none',
+                                    'display': 'flex',
+                                    'align-items': 'flex-start'
                                 }
                             ),
                             dcc.Checklist(
