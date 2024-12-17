@@ -156,13 +156,12 @@ app.layout = html.Div([
     [Output({'type': 'toggle-div', 'level': MATCH, 'key': MATCH}, 'style'),
      Output({'type': 'toggle-button', 'level': MATCH, 'key': MATCH}, 'children')],
     Input({'type': 'toggle-button', 'level': MATCH, 'key': MATCH}, 'n_clicks'),
-    State({'type': 'toggle-div', 'level': MATCH, 'key': MATCH}, 'style')
+    State({'type': 'toggle-div', 'level': MATCH, 'key': MATCH}, 'style'),
+    prevent_initial_call=True
 )
-def toggle_div_visibility(n_clicks, current_style):
-    # Wenn der Button geklickt wurde, wird die Sichtbarkeit des darunterligenden div geändert.
-    if n_clicks is None:
-        raise PreventUpdate  # Keine Aktion, wenn der Button nicht geklickt wurde
 
+def toggle_div_visibility(n_clicks, current_style):
+    # Wenn der Button geklickt wurde, wird die Sichtbarkeit des darunterliegenden div geändert.
     if current_style.get('display') == 'none':
         return {'margin-left': '20px', 'display': 'block'}, '▾'
     else:
