@@ -91,7 +91,7 @@ def generate_checklist(data, level=0):
                 html.Div([
                     html.Div([
                             dbc.Button(
-                                '▸',
+                                '▾' if level == 0 else '▸',
                                 id=button_id,
                                 style={
                                     'color': 'black',
@@ -153,19 +153,20 @@ app.layout = html.Div([
 
 
 @callback(
-    Output({'type': 'toggle-div', 'level': MATCH, 'key': MATCH}, 'style'),
+    [Output({'type': 'toggle-div', 'level': MATCH, 'key': MATCH}, 'style'),
+     Output({'type': 'toggle-button', 'level': MATCH, 'key': MATCH}, 'children')],
     Input({'type': 'toggle-button', 'level': MATCH, 'key': MATCH}, 'n_clicks'),
     State({'type': 'toggle-div', 'level': MATCH, 'key': MATCH}, 'style')
 )
 def toggle_div_visibility(n_clicks, current_style):
-    # Wenn der Button geklickt wurde, toggeln wir die Sichtbarkeit
+    # Wenn der Button geklickt wurde, wird die Sichtbarkeit des darunterligenden div geändert.
     if n_clicks is None:
         raise PreventUpdate  # Keine Aktion, wenn der Button nicht geklickt wurde
 
     if current_style.get('display') == 'none':
-        return {'margin-left': '20px', 'display': 'block'}
+        return {'margin-left': '20px', 'display': 'block'}, '▾'
     else:
-        return {'margin-left': '20px', 'display': 'none'}
+        return {'margin-left': '20px', 'display': 'none'}, '▸'
 
 
 
