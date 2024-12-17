@@ -87,7 +87,14 @@ def generate_checklist(data, level=0):
                     html.Div(
                         style={'display': 'flex'},
                         children = [
-                            dbc.Button('▶', style={'padding': '0px', 'background-color':'transparent', 'border-style': 'none'}),
+                            dbc.Button('▸',
+                                style={
+                                    'color': 'black',
+                                    'padding': '0px',
+                                    'background-color': 'transparent',
+                                    'border-style': 'none'
+                                }
+                            ),
                             dcc.Checklist(
                                 id={"type": "checklist", "level": level, "key": key},
                                 options=[{"label": key, "value": key}],
