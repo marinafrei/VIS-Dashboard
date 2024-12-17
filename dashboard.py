@@ -1,8 +1,9 @@
-from dash import Dash, dcc, html, Input, Output, callback, ALL, State
+from dash import Dash, dcc, html, Input, Output, callback, ALL, MATCH, State
 import plotly.express as px
 import numpy as np
 import pandas as pd
 import dash_bootstrap_components as dbc
+from dash.exceptions import PreventUpdate
 
 app = Dash (__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -78,16 +79,20 @@ for index, row in df_year_chf.iterrows():
 
 
 def generate_checklist(data, level=0):
-    #Erzeugt rekursiv eine verschachtelte Checkliste.
+    # Erzeugt rekursiv eine verschachtelte Checkliste.
     checklists = []
     for key, value in data.items():
-        if isinstance(value, dict):  # Verschachtelte Aufgaben
+        if isinstance(value, dict) and value:  # Verschachtelte Aufgaben (nicht-leeres Dict)
+            # Dynamische IDs für Button und das zu toggelnde Div
+            button_id = {"type": "toggle-button", "level": level, "key": key}
+            div_id = {"type": "toggle-div", "level": level, "key": key}
+            
             checklists.append(
                 html.Div([
-                    html.Div(
-                        style={'display': 'flex'},
-                        children = [
-                            dbc.Button('▸',
+                    html.Div([
+                            dbc.Button(
+                                '▸',
+                                id=button_id,
                                 style={
                                     'color': 'black',
                                     'padding': '0px',
@@ -101,25 +106,29 @@ def generate_checklist(data, level=0):
                                 value=[],
                                 labelStyle={"display": "block"},
                             )
-                    ]),
+                        ], style={'display': 'flex'}
+                    ),
+                    # Rekursive Erzeugung für den nächsten Level
                     html.Div(
                         generate_checklist(value, level=level + 1),
-                        style={"margin-left": "20px"}
+                        id=div_id,  # ID für das darunterliegende Div
+                        style={"margin-left": "20px", "display": "none"}  # Standardmäßig ausgeblendet
                     ),
                 ])
             )
-        elif isinstance(value, list):  # Endebene der Checkliste
+        elif isinstance(value, dict) and not value:  # Endebene: leeres Dict
             checklists.append(
                 html.Div([
                     dcc.Checklist(
                         id={"type": "checklist", "level": level, "key": key},
-                        options=[{"label": item, "value": item} for item in value],
+                        options=[{"label": key, "value": key}],
                         value=[],
                         labelStyle={"display": "block"},
                     )
-                ], style={"margin-left": "20px"})
+                ], style={"margin-left": "20px", 'display': 'flex' if level in [0, 1] else 'none'})
             )
     return checklists
+
 
 nested_checklist = generate_checklist(categories_data)
 
@@ -142,6 +151,21 @@ app.layout = html.Div([
     ])
 ])
 
+
+@callback(
+    Output({'type': 'toggle-div', 'level': MATCH, 'key': MATCH}, 'style'),
+    Input({'type': 'toggle-button', 'level': MATCH, 'key': MATCH}, 'n_clicks'),
+    State({'type': 'toggle-div', 'level': MATCH, 'key': MATCH}, 'style')
+)
+def toggle_div_visibility(n_clicks, current_style):
+    # Wenn der Button geklickt wurde, toggeln wir die Sichtbarkeit
+    if n_clicks is None:
+        raise PreventUpdate  # Keine Aktion, wenn der Button nicht geklickt wurde
+
+    if current_style.get('display') == 'none':
+        return {'margin-left': '20px', 'display': 'block'}
+    else:
+        return {'margin-left': '20px', 'display': 'none'}
 
 
 
