@@ -139,6 +139,7 @@ app.layout = html.Div([
     dbc.Row([
         dbc.Col([
             html.H4("Auswahl der Daten"),
+            dcc.Input(id='textsearch', placeholder='Suche nach Kategorie...', value=None, type='text'),
             html.Div(nested_checklist)
         ], width=3),
         dbc.Col([
@@ -152,6 +153,37 @@ app.layout = html.Div([
         ], width=9)
     ])
 ])
+
+'''
+Suche funktioniert zwar ABER:
+- Es braucht noch einen Defaultwert wenn der Input gelöscht wird, bzw. leer ist > d.h. die Liste muss eig zurückgesetzt werden dann (aber ohne löschen der checked values)
+- Im Moment wenn der Text im Inputfield gelöscht wird, wird alles eingefärbt.
+- Sie ist sehr langsam
+- Wenn der Suchtreffer eine der unteren Ebenen betrifft, wird dieser zwar eingefärbt aber nicht ausgeklappt.
+- Die oberen Ebenen sollen auch weiterhin angezeigt werden.
+- D.h. die zutreffenden Werte sollen ausgeklappt und eingefärbt werden.
+- Die obersten Ebenen immer sichtbar lassen.
+'''
+
+@callback(Output({'type': 'checklist', 'level': ALL, 'key': ALL}, 'style'),
+          Input('textsearch', 'value'),
+          prevent_initial_call=True)
+
+def text_search(search_value):
+    def search_checklist(data, search_value, styles=[]):
+        for key, value in data.items():          
+            if search_value.lower() in key.lower():
+                styles.append({'margin-left': '20px', 'display': 'block', 'backgroundColor': 'lightblue'})
+            else:
+                styles.append({'margin-left': '20px', 'display': 'none'})
+            if isinstance(value, dict):
+                search_checklist(value, search_value, styles)
+        return styles
+    
+    styles = search_checklist(categories_data, search_value)
+    return styles
+    
+                
 
 
 @callback(

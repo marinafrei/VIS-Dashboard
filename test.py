@@ -1,9 +1,9 @@
 from dash import Dash, dcc, html, Input, Output, callback, ALL, MATCH, State
-from dash.exceptions import PreventUpdate
 import plotly.express as px
 import numpy as np
 import pandas as pd
 import dash_bootstrap_components as dbc
+from dash.exceptions import PreventUpdate
 
 app = Dash (__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -52,7 +52,7 @@ df_type_chf = clean_data(df_type_chf, 'Haushaltstyp')
 # Erzeugen eines dict mit den Kategorien >> wird für die Checkliste benötigt
 # Dabei kann ein beliebiger dict von oben verwendet werden, da die Kategorien bei allen gleich sind
 categories_data = {}
-for index, row in df_year_chf.iterrows():
+for index, row in df_year_chf.head(50).iterrows():
     #Da die Kategorien im df im Long-Format mehrmals vorkommen, wird hier gestoppt, wenn 'Bruttoeinkommen' das zweite Mal vorkommt. Denn dann ist die Liste bereits komplett.
     if row['Ebene'] == '0':
         if len(categories_data) == 0:            
@@ -78,126 +78,23 @@ for index, row in df_year_chf.iterrows():
 
 
 
-def generate_checklist(data, level=0, id={'type': 'toggle-div', 'level': 0, 'key': 'Bruttoeinkommen'}):
-    # Erzeugt rekursiv eine verschachtelte Checkliste.
-    checklists = []
+'''
+def search_checklist(data, searchresults=[]):
+    search = 'Gesundheit'
     for key, value in data.items():
-        if isinstance(value, dict) and value:  # Verschachtelte Aufgaben (nicht-leeres Dict)
-            # Dynamische IDs für Button und das zu toggelnde Div
-            button_id = {"type": "toggle-button", "level": level, "key": key}
-            div_id = {"type": "toggle-div", "level": level, "key": key}
+        if search.lower() in key.lower():
+            searchresults.append(key)
+        if isinstance(value, dict):
+            search_checklist(value, searchresults)
+    return searchresults
             
-            checklists.append(
-                html.Div([
-                    html.Div([  # Button und Checklist
-                            dbc.Button('▸', id=button_id,
-                                style={
-                                    'color': 'black',
-                                    'padding': '0px',
-                                    'background-color': 'transparent',
-                                    'border-style': 'none'
-                                }
-                            ),
-                            dcc.Checklist(
-                                id={"type": "checklist", "level": level, "key": key},
-                                options=[{"label": key, "value": key}],
-                                value=[],
-                                labelStyle={"display": "block"},
-                            )
-                        ], style={'display': 'flex' if level in [0, 1] else 'none'}, id=id
-                    ),
-                    # Rekursive Erzeugung für den nächsten Level
-                    html.Div(
-                        generate_checklist(value, level=level + 1, id=div_id),
-                        id=div_id,  # div_id als Keyword-Argument übergeben
-                        style={"margin-left": "20px", "display": "none"}  # Standardmäßig ausgeblendet
-                    ),
-                ])
-            )
-        elif isinstance(value, dict) and not value:  # Endebene: leeres Dict
-            checklists.append(
-                html.Div([
-                    dcc.Checklist(
-                        id={"type": "checklist", "level": level, "key": key},
-                        options=[{"label": key, "value": key}],
-                        value=[],
-                        labelStyle={"display": "block"},
-                    )
-                ], style={"margin-left": "20px", 'display': 'none'})
-            )
-    return checklists
+           
+searchresult = search_checklist(categories_data)
+print(searchresult)
+'''
+
+for key in categories_data.keys():
+    print(key)
 
 
 
-
-nested_checklist = generate_checklist(categories_data)
-
-app.layout = html.Div([
-    html.H1("Dashboard Haushaltsausgaben"),
-    dbc.Row([
-        dbc.Col([
-            html.H4("Auswahl der Daten"),
-            html.Div(nested_checklist)
-        ], width=3),
-        dbc.Col([
-            dbc.Tabs(id='tabs', active_tab='tab_year', children=[
-                dbc.Tab(label='Nach Jahr', tab_id='tab_year'),
-                dbc.Tab(label='Nach Altersklasse', tab_id='tab_age'),
-                dbc.Tab(label='Nach Einkommen', tab_id='tab_income'),
-                dbc.Tab(label='Nach Haushaltstyp', tab_id='tab_type')
-            ]),
-            dcc.Graph(id='graph-output')
-        ], width=9)
-    ])
-])
-
-@app.callback(
-    Output({'type': 'toggle-div', 'level': MATCH, 'key': MATCH}, 'style'),
-    [Input({'type': 'toggle-button', 'level': MATCH, 'key': MATCH}, 'n_clicks')],
-    [State({'type': 'toggle-div', 'level': MATCH, 'key': MATCH}, 'style')]
-)
-def toggle_div_visibility(n_clicks, current_style):
-    # Wenn der Button geklickt wurde, toggeln wir die Sichtbarkeit
-    if n_clicks is None:
-        raise PreventUpdate  # Keine Aktion, wenn der Button nicht geklickt wurde
-
-    print('current_style:', current_style)
-    print('current_style.get', current_style.get('display'))          
-
-    if current_style and current_style.get('display') == 'none':
-        return {'margin-left': '20px', 'display': 'block'}
-    else:
-        return {'margin-left': '20px', 'display': 'none'}
-
-
-@callback(Output('graph-output', 'figure'), 
-          Input({'type': 'checklist', 'level': ALL, 'key': ALL}, 'value'),
-          Input('tabs', 'active_tab')
-          )
-
-def update_graph_year(all_checked_values, active_tab):
-    checked_values = []
-    for checklist in all_checked_values:
-        if checklist: #Not empty
-            for value in checklist:
-                checked_values.append(value)
-    
-    if active_tab == 'tab_year':
-        df_graph = df_year_chf[df_year_chf['Kategorie'].isin(checked_values)]
-        graph = px.line(df_graph, x='Jahr', y='CHF', color='Kategorie')
-    elif active_tab == 'tab_age':
-        df_graph = df_age_chf[df_age_chf['Kategorie'].isin(checked_values)]
-        graph = px.bar(df_graph, x='Altersklasse', y='CHF', color='Kategorie', barmode='group') 
-    elif active_tab == 'tab_income':
-        df_graph = df_income_chf[df_income_chf['Kategorie'].isin(checked_values)]
-        graph = px.bar(df_graph, x='Einkommensklasse', y='CHF', color='Kategorie', barmode='group')
-    elif active_tab == 'tab_type':
-        df_graph = df_type_chf[df_type_chf['Kategorie'].isin(checked_values)]
-        graph = px.bar(df_graph, x='Haushaltstyp', y='CHF', color='Kategorie', barmode='group')         
-
-    graph.update_layout()
-    return graph
-
-
-if __name__ == '__main__':
-    app.run_server(debug=True)
