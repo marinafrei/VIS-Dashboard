@@ -82,11 +82,12 @@ def generate_checklist(data, level=0):
     # Erzeugt rekursiv eine verschachtelte Checkliste.
     checklists = []
     for key, value in data.items():
+        # Dynamische IDs für Button und das zu toggelnde Div
+        button_id = {"type": "toggle-button", "level": level, "key": key}
+        toggle_div_id = {"type": "toggle-div", "level": level, "key": key}
+        checklist_container_id  = {"type": "checklist-container", "level": level, "key": key}
+        checklist_id = {"type": "checklist", "level": level, "key": key}
         if isinstance(value, dict) and value:  # Verschachtelte Aufgaben (nicht-leeres Dict)
-            # Dynamische IDs für Button und das zu toggelnde Div
-            button_id = {"type": "toggle-button", "level": level, "key": key}
-            div_id = {"type": "toggle-div", "level": level, "key": key}
-            
             checklists.append(
                 html.Div([
                     html.Div([
@@ -103,17 +104,19 @@ def generate_checklist(data, level=0):
                                 }
                             ),
                             dcc.Checklist(
-                                id={"type": "checklist", "level": level, "key": key},
+                                id=checklist_id,
                                 options=[{"label": key, "value": key}],
                                 value=[key] if key == "50: Konsumausgaben" else [], #Konsumausgaben als Default-Wert setzen beim Starten des Dashboard
                                 labelStyle={"display": "block"},
                             )
-                        ], style={'display': 'flex'}
+                        ], 
+                        id = checklist_container_id,
+                        style={'display': 'flex'}
                     ),
                     # Rekursive Erzeugung für den nächsten Level
                     html.Div(
                         generate_checklist(value, level=level + 1),
-                        id=div_id,  # ID für das darunterliegende Div
+                        id=toggle_div_id,  # ID für das darunterliegende Div
                         style={"margin-left": "20px", "display": "block" if level == 0 else 'none'}  # Standardmäßig ausgeblendet
                     ),
                 ])
@@ -127,12 +130,15 @@ def generate_checklist(data, level=0):
                         value=[],
                         labelStyle={"display": "block"},
                     )
-                ], style={"margin-left": "20px", 'display': 'flex'})
+                ],
+                id = checklist_container_id, 
+                style={"margin-left": "20px", 'display': 'flex'})
             )
     return checklists
 
 
 nested_checklist = generate_checklist(categories_data)
+
 
 app.layout = html.Div([
     html.H1("Dashboard Haushaltsausgaben"),
@@ -140,6 +146,7 @@ app.layout = html.Div([
         dbc.Col([
             html.H4("Auswahl der Daten"),
             dcc.Input(id='textsearch', placeholder='Suche nach Kategorie...', value=None, type='text'),
+            dbc.Button('Suchen', id='search-button'),
             html.Div(nested_checklist)
         ], width=3),
         dbc.Col([
@@ -156,38 +163,57 @@ app.layout = html.Div([
 
 '''
 Suche funktioniert zwar ABER:
-- Es braucht noch einen Defaultwert wenn der Input gelöscht wird, bzw. leer ist > d.h. die Liste muss eig zurückgesetzt werden dann (aber ohne löschen der checked values)
-- Im Moment wenn der Text im Inputfield gelöscht wird, wird alles eingefärbt.
 - Sie ist sehr langsam
-- Wenn der Suchtreffer eine der unteren Ebenen betrifft, wird dieser zwar eingefärbt aber nicht ausgeklappt.
-- Die oberen Ebenen sollen auch weiterhin angezeigt werden.
-- D.h. die zutreffenden Werte sollen ausgeklappt und eingefärbt werden.
-- Die obersten Ebenen immer sichtbar lassen.
+- Wenn nicht gefunden wird, "Keine Resultate gefunden" anzeigen.
 '''
 
-@callback(Output({'type': 'checklist', 'level': ALL, 'key': ALL}, 'style'),
-          Input('textsearch', 'value'),
+@callback(Output({'type': 'checklist-container', 'level': ALL, 'key': ALL}, 'style'),
+          Output({'type': 'toggle-div', 'level': ALL, 'key': ALL}, 'style', allow_duplicate=True),
+          Input('search-button', 'n_clicks'),            
+          State('textsearch', 'value'),
           prevent_initial_call=True)
 
-def text_search(search_value):
-    def search_checklist(data, search_value, styles=[]):
-        for key, value in data.items():          
-            if search_value.lower() in key.lower():
-                styles.append({'margin-left': '20px', 'display': 'block', 'backgroundColor': 'lightblue'})
-            else:
-                styles.append({'margin-left': '20px', 'display': 'none'})
-            if isinstance(value, dict):
-                search_checklist(value, search_value, styles)
-        return styles
-    
-    styles = search_checklist(categories_data, search_value)
-    return styles
-    
-                
+def text_search(n_clicks, search_value):
+    if search_value == '': #zurücksetzen der Checkliste
+        styles_checklist_container = [{'margin-left': '20px', 'display': 'flex'}] * 533        
+        styles_toggle_div = [{'margin-left': '20px', 'display': 'block'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}]
+        return styles_checklist_container, styles_toggle_div            
+    else:
+        def search_checklist(data, search_value, styles={}):
+            for key, value in data.items():
+                styles[key] = {'margin-left': '20px', 'display': 'none'}
+                if search_value.lower() in key.lower():
+                    styles[key] = {'margin-left': '20px', 'display': 'flex', 'backgroundColor': 'lightblue'}
+                    for style_key in styles:
+                        if search_value.lower() not in style_key.lower():
+                            category_number = style_key.split(':')[0]
+                            if category_number in key and style_key != key:
+                                styles[style_key] = {'margin-left': '20px', 'display': 'flex'}
+                                if key.startswith('5') or key.startswith('6'):
+                                    styles['50: Konsumausgaben'] = {'margin-left': '20px', 'display': 'flex'}
+                                elif key.startswith('31') or key.startswith('32') or key.startswith('33'):
+                                    styles['30: Obligatorische Transferausgaben'] = {'margin-left': '20px', 'display': 'flex'}
+                                elif key.startswith('36'):
+                                    styles['35: Monetäre Transferausgaben an andere Haushalte'] = {'margin-left': '20px', 'display': 'flex'}
+                                elif key.startswith('4'):
+                                    styles['40: Übrige Versicherungen, Gebühren und Übertragungen'] = {'margin-left': '20px', 'display': 'flex'}
+                                elif key.startswith('8'):
+                                    styles['80: Prämien für die Lebensversicherung'] = {'margin-left': '20px', 'display': 'flex'}
+                if isinstance(value, dict):
+                    search_checklist(value, search_value, styles)
+            return styles
+        
+        styles = search_checklist(categories_data, search_value)
+        styles_checklist_container = list(styles.values())
+
+        styles_toggle_div = [{"margin-left": "20px", "display": "block"}] * 176 #Die 176 toggle-div müssen auch auf sichtbar geschaltet werden, sonst zeigt es die untergeordneten markierten div nicht an.
+
+        return styles_checklist_container, styles_toggle_div
+             
 
 
 @callback(
-    [Output({'type': 'toggle-div', 'level': MATCH, 'key': MATCH}, 'style'),
+    [Output({'type': 'toggle-div', 'level': MATCH, 'key': MATCH}, 'style', allow_duplicate=True),
      Output({'type': 'toggle-button', 'level': MATCH, 'key': MATCH}, 'children')],
     Input({'type': 'toggle-button', 'level': MATCH, 'key': MATCH}, 'n_clicks'),
     State({'type': 'toggle-div', 'level': MATCH, 'key': MATCH}, 'style'),
@@ -233,4 +259,4 @@ def update_graph_year(all_checked_values, active_tab):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(debug=True)

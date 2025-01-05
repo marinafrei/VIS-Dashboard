@@ -52,7 +52,7 @@ df_type_chf = clean_data(df_type_chf, 'Haushaltstyp')
 # Erzeugen eines dict mit den Kategorien >> wird für die Checkliste benötigt
 # Dabei kann ein beliebiger dict von oben verwendet werden, da die Kategorien bei allen gleich sind
 categories_data = {}
-for index, row in df_year_chf.head(50).iterrows():
+for index, row in df_year_chf.head(10).iterrows():
     #Da die Kategorien im df im Long-Format mehrmals vorkommen, wird hier gestoppt, wenn 'Bruttoeinkommen' das zweite Mal vorkommt. Denn dann ist die Liste bereits komplett.
     if row['Ebene'] == '0':
         if len(categories_data) == 0:            
@@ -78,23 +78,32 @@ for index, row in df_year_chf.head(50).iterrows():
 
 
 
-'''
-def search_checklist(data, searchresults=[]):
-    search = 'Gesundheit'
+
+def search_checklist(data, search_value, styles={}):
     for key, value in data.items():
-        if search.lower() in key.lower():
-            searchresults.append(key)
+        styles[key] = {'margin-left': '20px', 'display': 'none'}
+        if search_value.lower() in key.lower():
+            styles[key] = {'margin-left': '20px', 'display': 'flex', 'backgroundColor': 'lightblue'}
+            for style_key in styles:
+                category_number = style_key.split(':')[0]
+                if category_number in key and style_key != key:
+                    styles[style_key] = {'margin-left': '20px', 'display': 'flex'}
+                if key.startswith('5') or key.startswith('6'):
+                    styles['50: Konsumausgaben'] = {'margin-left': '20px', 'display': 'flex'}
+                elif key.startswith('31') or key.startswith('32') or key.startswith('33'):
+                    styles['30: Obligatorische Transferausgaben'] = {'margin-left': '20px', 'display': 'flex'}
+                elif key.startswith('36'):
+                    styles['35: Monetäre Transferausgaben an andere Haushalte'] = {'margin-left': '20px', 'display': 'flex'}
+                elif key.startswith('4'):
+                    styles['40: Übrige Versicherungen, Gebühren und Übertragungen'] = {'margin-left': '20px', 'display': 'flex'}
+                elif key.startswith('8'):
+                    styles['80: Prämien für die Lebensversicherung'] = {'margin-left': '20px', 'display': 'flex'}
         if isinstance(value, dict):
-            search_checklist(value, searchresults)
-    return searchresults
-            
-           
-searchresult = search_checklist(categories_data)
-print(searchresult)
-'''
+            search_checklist(value, search_value, styles)
+    return styles
 
-for key in categories_data.keys():
-    print(key)
+search_value = 'sandwich'
+styles = search_checklist(categories_data, search_value)
 
-
-
+my_list = [{"margin-left": "20px", "display": "block"}] * 176
+print(my_list)
