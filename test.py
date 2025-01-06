@@ -107,3 +107,5 @@ styles = search_checklist(categories_data, search_value)
 
 my_list = [{"margin-left": "20px", "display": "block"}] * 176
 print(my_list)
+
+
