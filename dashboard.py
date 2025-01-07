@@ -85,7 +85,6 @@ def generate_checklist(data, level=0):
         # Dynamische IDs für Button und das zu toggelnde Div
         button_id = {"type": "toggle-button", "level": level, "key": key}
         toggle_div_id = {"type": "toggle-div", "level": level, "key": key}
-        checklist_container_id  = {"type": "checklist-container", "level": level, "key": key}
         checklist_id = {"type": "checklist", "level": level, "key": key}
         if isinstance(value, dict) and value:  # Verschachtelte Aufgaben (nicht-leeres Dict)
             checklists.append(
@@ -109,9 +108,7 @@ def generate_checklist(data, level=0):
                                 value=[key] if key == "50: Konsumausgaben" else [], #Konsumausgaben als Default-Wert setzen beim Starten des Dashboard
                                 labelStyle={"display": "block"},
                             )
-                        ], 
-                        id = checklist_container_id,
-                        style={'display': 'flex'}
+                        ], style={'display': 'flex'}
                     ),
                     # Rekursive Erzeugung für den nächsten Level
                     html.Div(
@@ -130,9 +127,7 @@ def generate_checklist(data, level=0):
                         value=[],
                         labelStyle={"display": "block"},
                     )
-                ],
-                id = checklist_container_id, 
-                style={"margin-left": "20px", 'display': 'flex'})
+                ], style={"margin-left": "20px", 'display': 'flex'})
             )
     return checklists
 
@@ -164,6 +159,7 @@ app.layout = html.Div([
 '''
 Suche funktioniert zwar ABER:
 - Sie ist sehr langsam
+- Liste zurücksetzen, wenn leere Suche gestartet wird
 - Wenn nicht gefunden wird, "Keine Resultate gefunden" anzeigen.
 '''
 
@@ -182,7 +178,7 @@ def text_search(n_clicks, search_value):
             if key == 'Bruttoeinkommen': #oberste Ebene immer einblenden
                 styles_toggle[key] = {'margin-left': '20px', 'display': 'block'}
                 buttons[key] = '▾' 
-            if '.' not in key: #die untersten Ebenen haben einen Punkt im key und bei der untersten Ebenen gibt es kein toggle-div, da es dort keine Unterpunkte mehr gibt zum Einblenden.
+            elif '.' not in key[0:6]: #die untersten Ebenen haben einen Punkt im key und bei der untersten Ebenen gibt es kein toggle-div, da es dort keine Unterpunkte mehr gibt zum Einblenden.
                 styles_toggle[key] = {'margin-left': '20px', 'display': 'none'}
                 buttons[key] = '▸'
             if search_value.lower() in key.lower():
@@ -190,25 +186,25 @@ def text_search(n_clicks, search_value):
                 for styles_key in styles_checklist:
                     category_number = styles_key.split(':')[0]
                     if category_number in key and styles_key != key:
-                        styles_toggle[key] = {'margin-left': '20px', 'display': 'block'}
-                        buttons[key] = '▾'
-                        if key.startswith('5') or key.startswith('6'):
-                            styles_toggle['50: Konsumausgaben'] = {'margin-left': '20px', 'display': 'block'}
-                            buttons['50: Konsumausgaben'] = '▾'
-                        elif key.startswith('31') or key.startswith('32') or key.startswith('33'):
-                            styles_toggle['30: Obligatorische Transferausgaben'] = {'margin-left': '20px', 'display': 'block'}
-                            buttons['30: Obligatorische Transferausgaben'] = '▾'
-                        elif key.startswith('36'):
-                            styles_toggle['35: Monetäre Transferausgaben an andere Haushalte'] = {'margin-left': '20px', 'display': 'block'}
-                            buttons['35: Monetäre Transferausgaben an andere Haushalte'] = '▾'
-                        elif key.startswith('4'):
-                            styles_toggle['40: Übrige Versicherungen, Gebühren und Übertragungen'] = {'margin-left': '20px', 'display': 'block'}
-                            buttons['40: Übrige Versicherungen, Gebühren und Übertragungen'] = '▾'
-                        elif key.startswith('8'):
-                            styles_toggle['80: Prämien für die Lebensversicherung'] = {'margin-left': '20px', 'display': 'block'}
-                            buttons['80: Prämien für die Lebensversicherung'] = '▾'
+                        styles_toggle[styles_key] = {'margin-left': '20px', 'display': 'block'}
+                        buttons[styles_key] = '▾'
+                    if key.startswith('5') or key.startswith('6'):
+                        styles_toggle['50: Konsumausgaben'] = {'margin-left': '20px', 'display': 'block'}
+                        buttons['50: Konsumausgaben'] = '▾'
+                    elif key.startswith('31') or key.startswith('32') or key.startswith('33'):
+                        styles_toggle['30: Obligatorische Transferausgaben'] = {'margin-left': '20px', 'display': 'block'}
+                        buttons['30: Obligatorische Transferausgaben'] = '▾'
+                    elif key.startswith('36'):
+                        styles_toggle['35: Monetäre Transferausgaben an andere Haushalte'] = {'margin-left': '20px', 'display': 'block'}
+                        buttons['35: Monetäre Transferausgaben an andere Haushalte'] = '▾'
+                    elif key.startswith('4'):
+                        styles_toggle['40: Übrige Versicherungen, Gebühren und Übertragungen'] = {'margin-left': '20px', 'display': 'block'}
+                        buttons['40: Übrige Versicherungen, Gebühren und Übertragungen'] = '▾'
+                    elif key.startswith('8'):
+                        styles_toggle['80: Prämien für die Lebensversicherung'] = {'margin-left': '20px', 'display': 'block'}
+                        buttons['80: Prämien für die Lebensversicherung'] = '▾'
             if isinstance(value, dict):
-                search_checklist(value, search_value, styles_checklist, styles_toggle, buttons)
+                search_checklist(value, search_value, styles_checklist, styles_toggle, buttons)          
         return styles_checklist, styles_toggle, buttons
     
     styles_checklist, styles_toggle, buttons = search_checklist(categories_data, search_value)
