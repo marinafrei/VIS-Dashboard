@@ -173,45 +173,50 @@ Suche funktioniert zwar ABER:
 
 def text_search(n_clicks, search_value):
     def search_checklist(data, search_value, styles_checklist={}, styles_toggle={}, buttons={}):
-        for key, value in data.items():
-            styles_checklist[key] = {'margin-left': '20px', 'display': 'block'}
-            if key == 'Bruttoeinkommen': #oberste Ebene immer einblenden
-                styles_toggle[key] = {'margin-left': '20px', 'display': 'block'}
-                buttons[key] = '▾' 
-            elif '.' not in key[0:6]: #die untersten Ebenen haben einen Punkt im key und bei der untersten Ebenen gibt es kein toggle-div, da es dort keine Unterpunkte mehr gibt zum Einblenden.
-                styles_toggle[key] = {'margin-left': '20px', 'display': 'none'}
-                buttons[key] = '▸'
-            if search_value.lower() in key.lower():
-                styles_checklist[key] = {'margin-left': '20px', 'display': 'block', 'backgroundColor': 'lightblue'}
-                for styles_key in styles_checklist:
-                    category_number = styles_key.split(':')[0]
-                    if category_number in key and styles_key != key:
-                        styles_toggle[styles_key] = {'margin-left': '20px', 'display': 'block'}
-                        buttons[styles_key] = '▾'
-                    if key.startswith('5') or key.startswith('6'):
-                        styles_toggle['50: Konsumausgaben'] = {'margin-left': '20px', 'display': 'block'}
-                        buttons['50: Konsumausgaben'] = '▾'
-                    elif key.startswith('31') or key.startswith('32') or key.startswith('33'):
-                        styles_toggle['30: Obligatorische Transferausgaben'] = {'margin-left': '20px', 'display': 'block'}
-                        buttons['30: Obligatorische Transferausgaben'] = '▾'
-                    elif key.startswith('36'):
-                        styles_toggle['35: Monetäre Transferausgaben an andere Haushalte'] = {'margin-left': '20px', 'display': 'block'}
-                        buttons['35: Monetäre Transferausgaben an andere Haushalte'] = '▾'
-                    elif key.startswith('4'):
-                        styles_toggle['40: Übrige Versicherungen, Gebühren und Übertragungen'] = {'margin-left': '20px', 'display': 'block'}
-                        buttons['40: Übrige Versicherungen, Gebühren und Übertragungen'] = '▾'
-                    elif key.startswith('8'):
-                        styles_toggle['80: Prämien für die Lebensversicherung'] = {'margin-left': '20px', 'display': 'block'}
-                        buttons['80: Prämien für die Lebensversicherung'] = '▾'
-            if isinstance(value, dict):
-                search_checklist(value, search_value, styles_checklist, styles_toggle, buttons)          
+        if search_value == '':
+          styles_checklist = [{'margin-left': '20px', 'display': 'block'}] * 533
+          buttons = ['▸'] * 176
+          styles_toggle = [{'margin-left': '20px', 'display': 'block'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}, {'margin-left': '20px', 'display': 'none'}]  
+        else:
+            for key, value in data.items():
+                styles_checklist[key] = {'margin-left': '20px', 'display': 'block'}
+                if key == 'Bruttoeinkommen': #oberste Ebene immer einblenden
+                    styles_toggle[key] = {'margin-left': '20px', 'display': 'block'}
+                    buttons[key] = '▾' 
+                elif '.' not in key[0:6]: #die untersten Ebenen haben einen Punkt im key und bei der untersten Ebenen gibt es kein toggle-div, da es dort keine Unterpunkte mehr gibt zum Einblenden.
+                    styles_toggle[key] = {'margin-left': '20px', 'display': 'none'}
+                    buttons[key] = '▸'
+                if search_value.lower() in key.lower():
+                    styles_checklist[key] = {'margin': '3px','margin-left': '20px', 'display': 'block', 'backgroundColor': 'lightblue'}
+                    for styles_key in styles_checklist:
+                        category_number = styles_key.split(':')[0]
+                        if category_number in key and styles_key != key:
+                            styles_toggle[styles_key] = {'margin-left': '20px', 'display': 'block'}
+                            buttons[styles_key] = '▾'
+                        if key.startswith('5') or key.startswith('6'):
+                            styles_toggle['50: Konsumausgaben'] = {'margin-left': '20px', 'display': 'block'}
+                            buttons['50: Konsumausgaben'] = '▾'
+                        elif key.startswith('31') or key.startswith('32') or key.startswith('33'):
+                            styles_toggle['30: Obligatorische Transferausgaben'] = {'margin-left': '20px', 'display': 'block'}
+                            buttons['30: Obligatorische Transferausgaben'] = '▾'
+                        elif key.startswith('36'):
+                            styles_toggle['35: Monetäre Transferausgaben an andere Haushalte'] = {'margin-left': '20px', 'display': 'block'}
+                            buttons['35: Monetäre Transferausgaben an andere Haushalte'] = '▾'
+                        elif key.startswith('4'):
+                            styles_toggle['40: Übrige Versicherungen, Gebühren und Übertragungen'] = {'margin-left': '20px', 'display': 'block'}
+                            buttons['40: Übrige Versicherungen, Gebühren und Übertragungen'] = '▾'
+                        elif key.startswith('8'):
+                            styles_toggle['80: Prämien für die Lebensversicherung'] = {'margin-left': '20px', 'display': 'block'}
+                            buttons['80: Prämien für die Lebensversicherung'] = '▾'
+                if isinstance(value, dict):
+                    search_checklist(value, search_value, styles_checklist, styles_toggle, buttons) 
+            styles_checklist = list(styles_checklist.values())
+            styles_toggle = list(styles_toggle.values())
+            buttons = list(buttons.values())         
         return styles_checklist, styles_toggle, buttons
     
     styles_checklist, styles_toggle, buttons = search_checklist(categories_data, search_value)
-    list_styles_checklist = list(styles_checklist.values())
-    list_styles_toggle = list(styles_toggle.values())
-    list_buttons = list(buttons.values())
-    return list_styles_checklist, list_styles_toggle, list_buttons
+    return styles_checklist, styles_toggle, buttons
              
 
 
