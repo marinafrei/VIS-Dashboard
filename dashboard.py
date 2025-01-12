@@ -40,6 +40,8 @@ def clean_data(dataframe, columnnames):
 
     dataframe.drop(['Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4'], axis=1 , inplace=True)
     dataframe_long = dataframe.melt(id_vars=['Kategorie', 'Ebene'], var_name=columnnames, value_name='CHF') #Hier wird der df in das Long-Format geändert, da man so viel einfacher Diagramme mit plotly erstellen kann.
+    dataframe_long['CHF'] = pd.to_numeric(dataframe_long['CHF'], errors='coerce') #konvertiert die Spalte CHF in numerische Werte und wandelt nicht-kobertierbare Werte d.h. '( )' zu NaN um
+    dataframe_long['CHF'] = dataframe_long['CHF'].round(2) #Rundet die Spalte CHF auf zwei Nachkommastellen    
     return dataframe_long
 
 
@@ -47,6 +49,8 @@ df_year_chf = clean_data(df_year_chf, 'Jahr')
 df_age_chf = clean_data(df_age_chf, 'Altersklasse')
 df_income_chf = clean_data(df_income_chf, 'Einkommensklasse')
 df_type_chf = clean_data(df_type_chf, 'Haushaltstyp')
+
+
 
 
 # Erzeugen eines dict mit den Kategorien >> wird für die Checkliste benötigt
@@ -156,12 +160,6 @@ app.layout = html.Div([
     ])
 ])
 
-'''
-Suche funktioniert zwar ABER:
-- Sie ist sehr langsam
-- Liste zurücksetzen, wenn leere Suche gestartet wird
-- Wenn nicht gefunden wird, "Keine Resultate gefunden" anzeigen.
-'''
 
 @callback([Output({'type': 'checklist', 'level': ALL, 'key': ALL}, 'style'),
           Output({'type': 'toggle-div', 'level': ALL, 'key': ALL}, 'style', allow_duplicate=True),
@@ -251,16 +249,20 @@ def update_graph_year(all_checked_values, active_tab):
     
     if active_tab == 'tab_year':
         df_graph = df_year_chf[df_year_chf['Kategorie'].isin(checked_values)]
-        graph = px.line(df_graph, x='Jahr', y='CHF', color='Kategorie')
+        graph = px.line(df_graph, x='Jahr', y='CHF', color='Kategorie', text='CHF')
+        graph.update_traces(textposition='top center')
     elif active_tab == 'tab_age':
         df_graph = df_age_chf[df_age_chf['Kategorie'].isin(checked_values)]
-        graph = px.bar(df_graph, x='Altersklasse', y='CHF', color='Kategorie', barmode='group') 
+        graph = px.bar(df_graph, x='Altersklasse', y='CHF', color='Kategorie', barmode='group', text_auto=True) 
+        graph.update_traces(textposition='outside')
     elif active_tab == 'tab_income':
         df_graph = df_income_chf[df_income_chf['Kategorie'].isin(checked_values)]
-        graph = px.bar(df_graph, x='Einkommensklasse', y='CHF', color='Kategorie', barmode='group')
+        graph = px.bar(df_graph, x='Einkommensklasse', y='CHF', color='Kategorie', barmode='group', text_auto=True)
+        graph.update_traces(textposition='outside')
     elif active_tab == 'tab_type':
         df_graph = df_type_chf[df_type_chf['Kategorie'].isin(checked_values)]
-        graph = px.bar(df_graph, x='Haushaltstyp', y='CHF', color='Kategorie', barmode='group')         
+        graph = px.bar(df_graph, x='Haushaltstyp', y='CHF', color='Kategorie', barmode='group', text_auto=True)
+        graph.update_traces(textposition='outside')         
 
     graph.update_layout()
     return graph
