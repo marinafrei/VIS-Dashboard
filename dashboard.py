@@ -5,10 +5,13 @@ import pandas as pd
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 
-app = Dash (__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = Dash (__name__, external_stylesheets=[dbc.themes.PULSE])
 
 rows_to_skip= list(range(0,13)) + [14,15,16,18,19,20] + list(range(553,583))
 df_year_chf = pd.read_excel('data.xlsx', sheet_name='Jahr', skiprows=rows_to_skip, usecols='A:G,I,K,M')
+df_region_chf = pd.read_excel('data.xlsx', sheet_name='Grossregion', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q,S')
+df_lang_chf = pd.read_excel('data.xlsx', sheet_name='Sprachregion', skiprows=rows_to_skip, usecols='A:G,I,K')
+df_canton_chf = pd.read_excel('data.xlsx', sheet_name='Kantone', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q,S,U')
 df_age_chf = pd.read_excel('data.xlsx', sheet_name='Altersklasse', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q')
 df_income_chf = pd.read_excel('data.xlsx', sheet_name='Einkommen', skiprows=rows_to_skip, usecols='A:G,I,K,M,O')
 df_type_chf = pd.read_excel('data.xlsx', sheet_name='Haushaltstyp', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q')
@@ -46,10 +49,12 @@ def clean_data(dataframe, columnnames):
 
 
 df_year_chf = clean_data(df_year_chf, 'Jahr')
+df_region_chf = clean_data(df_region_chf, 'Grossregion')
+df_lang_chf = clean_data(df_lang_chf, 'Sprachregion')
+df_canton_chf = clean_data(df_canton_chf, 'Kanton')
 df_age_chf = clean_data(df_age_chf, 'Altersklasse')
 df_income_chf = clean_data(df_income_chf, 'Einkommensklasse')
 df_type_chf = clean_data(df_type_chf, 'Haushaltstyp')
-
 
 
 
@@ -140,7 +145,32 @@ nested_checklist = generate_checklist(categories_data)
 
 
 app.layout = html.Div([
-    html.H1("Dashboard Haushaltsausgaben"),
+    dbc.Row([
+        dbc.Col([html.H1("Dashboard Haushaltsausgaben")], width=11),
+        dbc.Col([dbc.Button('i', id='info', style={'width': '30px', 'height': '30px', 'border-radius': '50%', 'padding': '0', 'textAlign': 'center', 'lineHeight': '30px'}),
+                 dbc.Modal([
+                     dbc.ModalHeader(dbc.ModalTitle('Informationen zum Datensatz')),
+                     dbc.ModalBody([
+                         html.Div([
+                             'In diesem Dashboard werden die Daten der Haushaltsbudgeterhebung des Bundesamts für Statistik im Zeitraum von 2018-2021 visualisiert. ',
+                             html.Br(),
+                             'Die Daten im Tab "Nach Jahr" zeigen die Jahre 2018-2021. ',
+                             html.Br(), 
+                             'Allen anderen Tabs liegen die kumulierten Daten von 2018 und 2019 vor. ' ,
+                             html.Br(),
+                             'Im Tab "Nach Kantonen" sind nur die bevölkerungsreichsten Kantone aufgeführt. ' ,
+                             html.Br(), 
+                             'Zu beachten ist ausserdem, dass es teilweise Lücken im Datensatz hat, wenn es für eine Kennzahl zu wenige Beobachtungen gibt. In den Balkendiagrammen wird dies mit dem Wert "NaN" markiert. Im Liniendiagramm ist dies lediglich an fehlenden Werten zu erkennen.',
+                             html.Br(),
+                             html.Br(),
+                             'Der originale Datensatz ist unter folgendem Link zu finden:',
+                             html.Br(),
+                             html.A('Link zum Datensatz', href='https://www.bfs.admin.ch/bfs/de/home/statistiken/katalog.assetdetail.32288712.html', target='_blank')
+                         ], style={'height': '400px'})
+                     ])
+                 ], id='modal', is_open=False)
+        ], width=1)
+    ]),    
     dbc.Row([
         dbc.Col([
             html.H4("Auswahl der Daten"),
@@ -155,12 +185,24 @@ app.layout = html.Div([
                 dbc.Tab(label='Nach Jahr', tab_id='tab_year'),
                 dbc.Tab(label='Nach Altersklasse', tab_id='tab_age'),
                 dbc.Tab(label='Nach Einkommen', tab_id='tab_income'),
-                dbc.Tab(label='Nach Haushaltstyp', tab_id='tab_type')
+                dbc.Tab(label='Nach Haushaltstyp', tab_id='tab_type'),
+                dbc.Tab(label='Nach Grossregion', tab_id='tab_region'),
+                dbc.Tab(label='Nach Sprachregion', tab_id='tab_lang'),
+                dbc.Tab(label='Nach Kantonen', tab_id='tab_canton')
             ]),
             dcc.Graph(id='graph-output')
         ], width=9)
     ])
 ])
+
+@callback(Output('modal', 'is_open'),
+          Input('info', 'n_clicks'),
+          prevent_initial_call=True)
+
+def manage_info_popup(n_clicks):
+    is_open = True
+    return is_open
+
 
 
 @callback([Output({'type': 'checklist', 'level': ALL, 'key': ALL}, 'style', allow_duplicate=True),
@@ -268,7 +310,7 @@ def toggle_div_visibility(n_clicks, current_style):
           Input('tabs', 'active_tab')
           )
 
-def update_graph_year(all_checked_values, active_tab):
+def update_graphs(all_checked_values, active_tab):
     checked_values = []
     for checklist in all_checked_values:
         if checklist: #Not empty
@@ -292,8 +334,20 @@ def update_graph_year(all_checked_values, active_tab):
         graph = px.bar(df_graph, x='Haushaltstyp', y='CHF', color='Kategorie', barmode='group', text_auto=True)
         graph.update_traces(textposition='outside')
         graph.update_layout(margin=dict(t=20, b=0, l=40, r=40), height=480) #Braucht sonst zu viel Platz wegen den langen Beschriftungen und Zahl auf Balken wird dann abgeschnitten.
+    elif active_tab == 'tab_region':
+        df_graph = df_region_chf[df_region_chf['Kategorie'].isin(checked_values)]
+        graph = px.bar(df_graph, x='Grossregion', y='CHF', color='Kategorie', barmode='group', text_auto=True)
+        graph.update_traces(textposition='outside')
+    elif active_tab == 'tab_lang':
+        df_graph = df_lang_chf[df_lang_chf['Kategorie'].isin(checked_values)]
+        graph = px.bar(df_graph, x='Sprachregion', y='CHF', color='Kategorie', barmode='group', text_auto=True)
+        graph.update_traces(textposition='outside')
+    elif active_tab == 'tab_canton':
+        df_graph = df_canton_chf[df_canton_chf['Kategorie'].isin(checked_values)]
+        graph = px.bar(df_graph, x='Kanton', y='CHF', color='Kategorie', barmode='group', text_auto=True)
+        graph.update_traces(textposition='outside')
 
-    graph.update_layout()
+    graph.update_layout(template='plotly_white')
     return graph
 
 
