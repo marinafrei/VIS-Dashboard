@@ -5,7 +5,7 @@ import pandas as pd
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 
-app = Dash (__name__, external_stylesheets=[dbc.themes.PULSE])
+app = Dash (__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 rows_to_skip= list(range(0,13)) + [14,15,16,18,19,20] + list(range(553,583))
 df_year_chf = pd.read_excel('data.xlsx', sheet_name='Jahr', skiprows=rows_to_skip, usecols='A:G,I,K,M')
@@ -146,8 +146,8 @@ nested_checklist = generate_checklist(categories_data)
 
 app.layout = html.Div([
     dbc.Row([
-        dbc.Col([html.H1("Dashboard Haushaltsausgaben")], width=11),
-        dbc.Col([dbc.Button('i', id='info', style={'width': '30px', 'height': '30px', 'border-radius': '50%', 'padding': '0', 'textAlign': 'center', 'lineHeight': '30px'}),
+        dbc.Col([html.H1("Dashboard Haushaltsausgaben", style={'padding': '0px 10px'})], style={'padding': '0px'}, width=11),
+        dbc.Col([dbc.Button('i', id='info', style={'width': '30px', 'height': '30px', 'border-radius': '50%', 'display': 'flex', 'alignItems': 'center', 'justifyContent': 'center', 'backgroundColor': '#6C53C8', 'border-color': 'white', 'border-width': '3px'}),
                  dbc.Modal([
                      dbc.ModalHeader(dbc.ModalTitle('Informationen zum Datensatz')),
                      dbc.ModalBody([
@@ -169,26 +169,27 @@ app.layout = html.Div([
                          ], style={'height': '400px'})
                      ])
                  ], id='modal', is_open=False)
-        ], width=1)
-    ]),    
+        ], style={'display': 'flex', 'alignItems': 'center', 'justifyContent': 'center'}, width=1)
+    ], style={'color': 'white', 'backgroundColor': '#6C53C8', 'margin': '0px 0px 5px'}),    
     dbc.Row([
         dbc.Col([
-            html.H4("Auswahl der Daten"),
-            dcc.Input(id='textsearch', placeholder='Suche nach Kategorie...', value=None, type='text'),
-            dbc.Button('Suchen', id='search-button'),
-            dbc.Button('Checkliste zurücksetzen', id='reset'),
-            html.Div('', id='show_no_result'),
+            html.H4("Auswahl der Daten", style={'padding': '0px 10px', 'color': '#6C53C8'}),
+            dcc.Input(id='textsearch', placeholder='Suche nach Kategorie...', value=None, type='text', style={'margin': '5px'}),
+            dbc.Button('Suchen', id='search-button', style={'backgroundColor': '#6C53C8', 'border': '0px', 'height': '35px'}),
+            html.Br(),
+            dbc.Button('Checkliste zurücksetzen', id='reset', style={'backgroundColor': '#6C53C8', 'border': '0px', 'margin': '5px'}),
+            html.Div('', id='show_no_result', style={'padding': '0px 5px'}),
             html.Div(nested_checklist)
         ], width=3),
         dbc.Col([
             dbc.Tabs(id='tabs', active_tab='tab_year', children=[
-                dbc.Tab(label='Nach Jahr', tab_id='tab_year'),
-                dbc.Tab(label='Nach Altersklasse', tab_id='tab_age'),
-                dbc.Tab(label='Nach Einkommen', tab_id='tab_income'),
-                dbc.Tab(label='Nach Haushaltstyp', tab_id='tab_type'),
-                dbc.Tab(label='Nach Grossregion', tab_id='tab_region'),
-                dbc.Tab(label='Nach Sprachregion', tab_id='tab_lang'),
-                dbc.Tab(label='Nach Kantonen', tab_id='tab_canton')
+                dbc.Tab(label='Nach Jahr', tab_id='tab_year', label_style={'color': '#6C53C8'}, active_label_style={'backgroundColor': '#6C53C8', 'color': 'white'}),
+                dbc.Tab(label='Nach Altersklasse', tab_id='tab_age', label_style={'color': '#6C53C8'}, active_label_style={'backgroundColor': '#6C53C8', 'color': 'white'}),
+                dbc.Tab(label='Nach Einkommen', tab_id='tab_income', label_style={'color': '#6C53C8'}, active_label_style={'backgroundColor': '#6C53C8', 'color': 'white'}),
+                dbc.Tab(label='Nach Haushaltstyp', tab_id='tab_type', label_style={'color': '#6C53C8'}, active_label_style={'backgroundColor': '#6C53C8', 'color': 'white'}),
+                dbc.Tab(label='Nach Grossregion', tab_id='tab_region', label_style={'color': '#6C53C8'}, active_label_style={'backgroundColor': '#6C53C8', 'color': 'white'}),
+                dbc.Tab(label='Nach Sprachregion', tab_id='tab_lang', label_style={'color': '#6C53C8'}, active_label_style={'backgroundColor': '#6C53C8', 'color': 'white'}),
+                dbc.Tab(label='Nach Kantonen', tab_id='tab_canton', label_style={'color': '#6C53C8'}, active_label_style={'backgroundColor': '#6C53C8', 'color': 'white'})
             ]),
             dcc.Graph(id='graph-output')
         ], width=9)
