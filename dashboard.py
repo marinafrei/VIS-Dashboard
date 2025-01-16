@@ -92,15 +92,15 @@ def generate_checklist(data, level=0):
     checklists = []
     for key, value in data.items():
         # Dynamische IDs für Button und das zu toggelnde Div
-        button_id = {"type": "toggle-button", "level": level, "key": key}
-        toggle_div_id = {"type": "toggle-div", "level": level, "key": key}
-        checklist_id = {"type": "checklist", "level": level, "key": key}
+        button_id = {"type": "toggle-button", "key": key}
+        toggle_div_id = {"type": "toggle-div", "key": key}
+        checklist_id = {"type": "checklist", "key": key}
         if isinstance(value, dict) and value:  # Verschachtelte Aufgaben (nicht-leeres Dict)
             checklists.append(
                 html.Div([
                     html.Div([
                             dbc.Button(
-                                '▾' if level == 0 else '▸',
+                                '▾' if key == 'Bruttoeinkommen' else '▸',
                                 id=button_id,
                                 style={
                                     'color': 'black',
@@ -123,7 +123,7 @@ def generate_checklist(data, level=0):
                     html.Div(
                         generate_checklist(value, level=level + 1),
                         id=toggle_div_id,  # ID für das darunterliegende Div
-                        style={"margin-left": "20px", "display": "block" if level == 0 else 'none'}  # Standardmäßig ausgeblendet
+                        style={"margin-left": "20px", "display": "block" if key == 'Bruttoeinkommen' else 'none'}  # Standardmäßig ausgeblendet
                     ),
                 ])
             )
@@ -131,7 +131,7 @@ def generate_checklist(data, level=0):
             checklists.append(
                 html.Div([
                     dcc.Checklist(
-                        id={"type": "checklist", "level": level, "key": key},
+                        id={"type": "checklist", "key": key},
                         options=[{"label": key, "value": key}],
                         value=[],
                         labelStyle={"display": "block"},
@@ -217,9 +217,9 @@ def reset_checklist(n_clicks):
 
 
 
-@callback([Output({'type': 'checklist', 'level': ALL, 'key': ALL}, 'style'),
-          Output({'type': 'toggle-div', 'level': ALL, 'key': ALL}, 'style', allow_duplicate=True),
-          Output({'type': 'toggle-button', 'level': ALL, 'key': ALL}, 'children', allow_duplicate=True),
+@callback([Output({'type': 'checklist', 'key': ALL}, 'style'),
+          Output({'type': 'toggle-div', 'key': ALL}, 'style', allow_duplicate=True),
+          Output({'type': 'toggle-button', 'key': ALL}, 'children', allow_duplicate=True),
           Output('show_no_result', 'children')],
           Input('search-button', 'n_clicks'),            
           State('textsearch', 'value'),
@@ -285,10 +285,10 @@ def text_search(n_clicks, search_value):
 
 
 @callback(
-    [Output({'type': 'toggle-div', 'level': MATCH, 'key': MATCH}, 'style', allow_duplicate=True),
-     Output({'type': 'toggle-button', 'level': MATCH, 'key': MATCH}, 'children', allow_duplicate=True)],
-    Input({'type': 'toggle-button', 'level': MATCH, 'key': MATCH}, 'n_clicks'),
-    State({'type': 'toggle-div', 'level': MATCH, 'key': MATCH}, 'style'),
+    [Output({'type': 'toggle-div', 'key': MATCH}, 'style', allow_duplicate=True),
+     Output({'type': 'toggle-button', 'key': MATCH}, 'children', allow_duplicate=True)],
+    Input({'type': 'toggle-button', 'key': MATCH}, 'n_clicks'),
+    State({'type': 'toggle-div', 'key': MATCH}, 'style'),
     prevent_initial_call=True
 )
 
@@ -302,7 +302,7 @@ def toggle_div_visibility(n_clicks, current_style):
 
 
 @callback(Output('graph-output', 'figure'), 
-          Input({'type': 'checklist', 'level': ALL, 'key': ALL}, 'value'),
+          Input({'type': 'checklist', 'key': ALL}, 'value'),
           Input('tabs', 'active_tab')
           )
 
