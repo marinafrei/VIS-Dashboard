@@ -1,4 +1,4 @@
-from dash import Dash, dcc, html, Input, Output, callback, ALL, MATCH, State
+from dash import Dash, dcc, html, Input, Output, callback, ALL, MATCH, State, no_update
 import plotly.express as px
 import numpy as np
 import pandas as pd
@@ -125,7 +125,7 @@ for index, row in df_year_chf.iterrows():
                     no_result = no_result and child_no_result        
             return styles, no_result
 
-def generate_checklist(data, level=0, return_values=None):
+def generate_checklist(data, level=0, return_values=None, checked_values=None):
     # Erzeugt rekursiv eine verschachtelte Checkliste.
     checklists = []
     for key, value in data.items():
@@ -137,6 +137,11 @@ def generate_checklist(data, level=0, return_values=None):
             checklist_style = return_values[key][0]
             toggle_div_style = return_values[key][1]
             button_value = return_values[key][2]
+        if checked_values:
+            if key in checked_values:
+                checked_key = [key]
+            else:
+                checked_key = None
         if isinstance(value, dict) and value:  # Verschachtelte Aufgaben (nicht-leeres Dict)
             checklists.append(
                 html.Div([
@@ -156,14 +161,14 @@ def generate_checklist(data, level=0, return_values=None):
                             dcc.Checklist(
                                 id=checklist_id,
                                 options=[{"label": key, "value": key}],
-                                value=[key] if key == "50: Konsumausgaben" else [], #Konsumausgaben als Default-Wert setzen beim Starten des Dashboard
+                                value=checked_key if checked_values and checked_key else ([key] if key == "50: Konsumausgaben" and not checked_values else []), #Konsumausgaben als Default-Wert setzen beim Starten des Dashboard
                                 labelStyle={"display": "block"},
                             )
                         ], style=checklist_style if return_values else {'display': 'flex'}
                     ),
                     # Rekursive Erzeugung für den nächsten Level
                     html.Div(
-                        generate_checklist(value, level=level + 1, return_values=return_values),
+                        generate_checklist(value, level=level + 1, return_values=return_values, checked_values=checked_values),
                         id=toggle_div_id,  # ID für das darunterliegende Div
                         style=toggle_div_style if return_values else ({"margin-left": "20px", "display": "block" if key == 'Bruttoeinkommen' else 'none'})  # Standardmäßig ausgeblendet
                     ),
@@ -175,7 +180,7 @@ def generate_checklist(data, level=0, return_values=None):
                     dcc.Checklist(
                         id={"type": "checklist", "key": key},
                         options=[{"label": key, "value": key}],
-                        value=[],
+                        value=checked_key if checked_values and checked_key else [],
                         labelStyle={"display": "block"},
                     )
                 ], style=checklist_style if return_values else {"margin-left": "20px", 'display': 'flex'})
@@ -220,7 +225,7 @@ app.layout = html.Div([
             dbc.Button('Suchen', id='search-button', style={'backgroundColor': '#6C53C8', 'border': '0px', 'height': '35px'}),
             html.Br(),
             dbc.Button('Checkliste zurücksetzen', id='reset', style={'backgroundColor': '#6C53C8', 'border': '0px', 'margin': '5px'}),
-            html.Div('', id='show_no_result', style={'padding': '0px 5px'}),
+            html.Div('', id='show_no_result', style={'padding': '0px 5px', 'font-weight': 'bold'}),
             html.Div(nested_checklist, id='nested_checklist')
         ], width=3),
         dbc.Col([
@@ -261,21 +266,31 @@ def reset_checklist(n_clicks):
 
 @callback([Output('nested_checklist', 'children', allow_duplicate=True),
           Output('show_no_result', 'children', allow_duplicate=True)],
-          Input('search-button', 'n_clicks'),            
+          Input('search-button', 'n_clicks'), 
+          State({'type': 'checklist', 'key': ALL}, 'value'),           
           State('textsearch', 'value'),
           prevent_initial_call=True)
 
 
-def text_search(n_clicks, search_value): 
-    return_values, no_result = search_checklist(categories_data, search_value)
-    checklist = generate_checklist(categories_data, 0, return_values)
-    if no_result == True:
-        show_no_result = 'Keine Resultate gefunden'
+def text_search(n_clicks, all_checked_values, search_value):
+    if search_value == None:
+        show_no_result = 'Bitte einen Suchbegriff eingeben'
+        return no_update, show_no_result
     else:
-        show_no_result = ''  
+        checked_values = []
+        for checklist in all_checked_values:
+            if checklist: #Not empty
+                for value in checklist:
+                    checked_values.append(value) 
+        return_values, no_result = search_checklist(categories_data, search_value)
+        checklist = generate_checklist(categories_data, 0, return_values, checked_values)
+        if no_result == True:
+            show_no_result = 'Keine Resultate gefunden'
+        else:
+            show_no_result = ''  
 
-    return checklist, show_no_result
-             
+        return checklist, show_no_result
+                
 
 
 @callback(
