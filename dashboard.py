@@ -206,12 +206,14 @@ def manage_info_popup(n_clicks):
 
 
 
-@callback([Output('nested_checklist', 'children')],
+@callback([Output('nested_checklist', 'children'),
+          Output('show_no_result', 'children', allow_duplicate=True)],
           Input('reset', 'n_clicks'),            
           prevent_initial_call=True)
 
 def reset_checklist(n_clicks):   
-      return nested_checklist    
+      show_no_result = ''
+      return nested_checklist, show_no_result    
 
 
 
