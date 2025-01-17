@@ -8,18 +8,32 @@ import dash_bootstrap_components as dbc
 app = Dash (__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 rows_to_skip= list(range(0,13)) + [14,15,16,18,19,20] + list(range(553,583))
+
 df_year_chf = pd.read_excel('data.xlsx', sheet_name='Jahr', skiprows=rows_to_skip, usecols='A:G,I,K,M')
+df_year_per = pd.read_excel('data.xlsx', sheet_name='Jahr', skiprows=rows_to_skip, usecols='A:E,H,J,L,N')
+
 df_region_chf = pd.read_excel('data.xlsx', sheet_name='Grossregion', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q,S')
+df_region_per = pd.read_excel('data.xlsx', sheet_name='Grossregion', skiprows=rows_to_skip, usecols='A:E,H,J,L,N,P,R,T')
+
 df_lang_chf = pd.read_excel('data.xlsx', sheet_name='Sprachregion', skiprows=rows_to_skip, usecols='A:G,I,K')
+df_lang_per = pd.read_excel('data.xlsx', sheet_name='Sprachregion', skiprows=rows_to_skip, usecols='A:E,H,J,L')
+
 df_canton_chf = pd.read_excel('data.xlsx', sheet_name='Kantone', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q,S,U')
+df_canton_per = pd.read_excel('data.xlsx', sheet_name='Kantone', skiprows=rows_to_skip, usecols='A:E,H,J,L,N,P,R,T,V')
+
 df_age_chf = pd.read_excel('data.xlsx', sheet_name='Altersklasse', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q')
+df_age_per = pd.read_excel('data.xlsx', sheet_name='Altersklasse', skiprows=rows_to_skip, usecols='A:E,H,J,L,N,P,R')
+
 df_income_chf = pd.read_excel('data.xlsx', sheet_name='Einkommen', skiprows=rows_to_skip, usecols='A:G,I,K,M,O')
+df_income_per = pd.read_excel('data.xlsx', sheet_name='Einkommen', skiprows=rows_to_skip, usecols='A:E,H,J,L,N,P')
+
 df_type_chf = pd.read_excel('data.xlsx', sheet_name='Haushaltstyp', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q')
+df_type_per = pd.read_excel('data.xlsx', sheet_name='Haushaltstyp', skiprows=rows_to_skip, usecols='A:E,H,J,L,N,P,R')
 
 
 #Die Zellenbeschreibungen sind nicht alle in der ersten Spalte, sondern pro Ebene eins eingerückt.
 #Dies wird hier bereinigt und damit man die Info zur Ebene nicht verliert eine zusätzliche Spalte 'Ebene' eingefügt
-def clean_data(dataframe, columnnames):
+def clean_data(dataframe, columnname):
     dataframe.rename(columns={dataframe.columns[0]: 'Kategorie', dataframe.columns[5]: 'Ebene'}, inplace= True)
     dataframe['Ebene'] = dataframe['Ebene'].astype(object) #damit der datatype stimmt
     for index, row in dataframe.iterrows():
@@ -42,19 +56,35 @@ def clean_data(dataframe, columnnames):
             dataframe.loc[index, 'Ebene'] = '5'
 
     dataframe.drop(['Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4'], axis=1 , inplace=True)
-    dataframe_long = dataframe.melt(id_vars=['Kategorie', 'Ebene'], var_name=columnnames, value_name='CHF') #Hier wird der df in das Long-Format geändert, da man so viel einfacher Diagramme mit plotly erstellen kann.
-    dataframe_long['CHF'] = pd.to_numeric(dataframe_long['CHF'], errors='coerce') #konvertiert die Spalte CHF in numerische Werte und wandelt nicht-kobertierbare Werte d.h. '( )' zu NaN um
-    dataframe_long['CHF'] = dataframe_long['CHF'].round(2) #Rundet die Spalte CHF auf zwei Nachkommastellen    
+    column_names = dataframe.columns
+    if '.1' in column_names[2]:       
+        column_names = [column.replace('.1', '') for column in dataframe.columns] #Da die Spaltennamen im Excel doppelt sind, wird dann beim Einlesen des percent df ein .1 an die Spaltennamen angehängt. Dies wird hier bereinigt.
+        dataframe.columns = column_names
+        dataframe_long = dataframe.melt(id_vars=['Kategorie', 'Ebene'], var_name=columnname, value_name='%') #Hier wird der df in das Long-Format geändert, da man so viel einfacher Diagramme mit plotly erstellen kann.
+        dataframe_long['%'] = pd.to_numeric(dataframe_long['%'], errors='coerce') #konvertiert die Spalte Prozent in numerische Werte und wandelt nicht-kobertierbare Werte d.h. '( )' zu NaN um
+        dataframe_long['%'] = dataframe_long['%'] * 100
+        dataframe_long['%'] = dataframe_long['%'].round(2) #Rundet die Spalte Prozent auf zwei Nachkommastellen   
+    else:     
+        dataframe_long = dataframe.melt(id_vars=['Kategorie', 'Ebene'], var_name=columnname, value_name='CHF') #Hier wird der df in das Long-Format geändert, da man so viel einfacher Diagramme mit plotly erstellen kann.
+        dataframe_long['CHF'] = pd.to_numeric(dataframe_long['CHF'], errors='coerce') #konvertiert die Spalte CHF in numerische Werte und wandelt nicht-kobertierbare Werte d.h. '( )' zu NaN um
+        dataframe_long['CHF'] = dataframe_long['CHF'].round(2) #Rundet die Spalte CHF auf zwei Nachkommastellen    
     return dataframe_long
 
 
 df_year_chf = clean_data(df_year_chf, 'Jahr')
+df_year_per = clean_data(df_year_per, 'Jahr')
 df_region_chf = clean_data(df_region_chf, 'Grossregion')
+df_region_per = clean_data(df_region_per, 'Grossregion')
 df_lang_chf = clean_data(df_lang_chf, 'Sprachregion')
+df_lang_per = clean_data(df_lang_per, 'Sprachregion')
 df_canton_chf = clean_data(df_canton_chf, 'Kanton')
+df_canton_per = clean_data(df_canton_per, 'Kanton')
 df_age_chf = clean_data(df_age_chf, 'Altersklasse')
+df_age_per = clean_data(df_age_per, 'Altersklasse')
 df_income_chf = clean_data(df_income_chf, 'Einkommensklasse')
+df_income_per = clean_data(df_income_per, 'Einkommensklasse')
 df_type_chf = clean_data(df_type_chf, 'Haushaltstyp')
+df_type_per = clean_data(df_type_per, 'Haushaltstyp')
 
 
 
@@ -85,45 +115,46 @@ for index, row in df_year_chf.iterrows():
         rowkey_level5 = row['Kategorie']
         categories_data[rowkey_level0][rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4][rowkey_level5] = {}
 
-    def search_checklist(data, search_value, styles={}, no_result=True):
-            for key, value in data.items():
-                styles[key] = [{'margin-left': '20px', 'display': 'flex'}]
-                if key == 'Bruttoeinkommen': #oberste Ebene immer einblenden
-                    styles[key].append({'margin-left': '20px', 'display': 'block'})
-                    styles[key].append('▾')
-                elif '.' not in key[0:6]: #die untersten Ebenen haben einen Punkt im key und bei der untersten Ebenen gibt es kein toggle-div, da es dort keine Unterpunkte mehr gibt zum Einblenden.
-                    styles[key].append({'margin-left': '20px', 'display': 'none'})
-                    styles[key].append('▸')
-                elif '.' in key[0:6]:
-                    styles[key].append('empty')
-                    styles[key].append('empty')                    
-                if search_value.lower() in key.lower():
-                    styles[key][0] = {'margin': '3px','margin-left': '20px', 'display': 'flex', 'backgroundColor': 'lightblue'}
-                    no_result=False
-                    for styles_key in styles:
-                        category_number = styles_key.split(':')[0]
-                        if category_number in key and styles_key != key:
-                            styles[styles_key][1] = {'margin-left': '20px', 'display': 'block'}
-                            styles[styles_key][2] = '▾'
-                        if key.startswith('5') or key.startswith('6'):
-                            styles['50: Konsumausgaben'][1] = {'margin-left': '20px', 'display': 'block'}
-                            styles['50: Konsumausgaben'][2] = '▾'
-                        elif key.startswith('31') or key.startswith('32') or key.startswith('33'):
-                            styles['30: Obligatorische Transferausgaben'][1] = {'margin-left': '20px', 'display': 'block'}
-                            styles['30: Obligatorische Transferausgaben'][2] = '▾'
-                        elif key.startswith('36'):
-                            styles['35: Monetäre Transferausgaben an andere Haushalte'][1] = {'margin-left': '20px', 'display': 'block'}
-                            styles['35: Monetäre Transferausgaben an andere Haushalte'][2] = '▾'
-                        elif key.startswith('4'):
-                            styles['40: Übrige Versicherungen, Gebühren und Übertragungen'][1] = {'margin-left': '20px', 'display': 'block'}
-                            styles['40: Übrige Versicherungen, Gebühren und Übertragungen'][2] = '▾'
-                        elif key.startswith('8'):
-                            styles['80: Prämien für die Lebensversicherung'][1] = {'margin-left': '20px', 'display': 'block'}
-                            styles['80: Prämien für die Lebensversicherung'][2] = '▾'
-                if isinstance(value, dict):
-                    _, child_no_result = search_checklist(value, search_value, styles, no_result)
-                    no_result = no_result and child_no_result        
-            return styles, no_result
+
+def search_checklist(data, search_value, styles={}, no_result=True):
+        for key, value in data.items():
+            styles[key] = [{'margin-left': '20px', 'display': 'flex'}]
+            if key == 'Bruttoeinkommen': #oberste Ebene immer einblenden
+                styles[key].append({'margin-left': '20px', 'display': 'block'})
+                styles[key].append('▾')
+            elif '.' not in key[0:6]: #die untersten Ebenen haben einen Punkt im key und bei der untersten Ebenen gibt es kein toggle-div, da es dort keine Unterpunkte mehr gibt zum Einblenden.
+                styles[key].append({'margin-left': '20px', 'display': 'none'})
+                styles[key].append('▸')
+            elif '.' in key[0:6]:
+                styles[key].append('empty')
+                styles[key].append('empty')                    
+            if search_value.lower() in key.lower():
+                styles[key][0] = {'margin': '3px','margin-left': '20px', 'display': 'flex', 'backgroundColor': 'lightblue'}
+                no_result=False
+                for styles_key in styles:
+                    category_number = styles_key.split(':')[0]
+                    if category_number in key and styles_key != key:
+                        styles[styles_key][1] = {'margin-left': '20px', 'display': 'block'}
+                        styles[styles_key][2] = '▾'
+                    if key.startswith('5') or key.startswith('6'):
+                        styles['50: Konsumausgaben'][1] = {'margin-left': '20px', 'display': 'block'}
+                        styles['50: Konsumausgaben'][2] = '▾'
+                    elif key.startswith('31') or key.startswith('32') or key.startswith('33'):
+                        styles['30: Obligatorische Transferausgaben'][1] = {'margin-left': '20px', 'display': 'block'}
+                        styles['30: Obligatorische Transferausgaben'][2] = '▾'
+                    elif key.startswith('36'):
+                        styles['35: Monetäre Transferausgaben an andere Haushalte'][1] = {'margin-left': '20px', 'display': 'block'}
+                        styles['35: Monetäre Transferausgaben an andere Haushalte'][2] = '▾'
+                    elif key.startswith('4'):
+                        styles['40: Übrige Versicherungen, Gebühren und Übertragungen'][1] = {'margin-left': '20px', 'display': 'block'}
+                        styles['40: Übrige Versicherungen, Gebühren und Übertragungen'][2] = '▾'
+                    elif key.startswith('8'):
+                        styles['80: Prämien für die Lebensversicherung'][1] = {'margin-left': '20px', 'display': 'block'}
+                        styles['80: Prämien für die Lebensversicherung'][2] = '▾'
+            if isinstance(value, dict):
+                _, child_no_result = search_checklist(value, search_value, styles, no_result)
+                no_result = no_result and child_no_result        
+        return styles, no_result
 
 def generate_checklist(data, level=0, return_values=None, checked_values=None):
     # Erzeugt rekursiv eine verschachtelte Checkliste.
@@ -220,7 +251,9 @@ app.layout = html.Div([
     ], style={'color': 'white', 'backgroundColor': '#6C53C8', 'margin': '0px 0px 5px'}),    
     dbc.Row([
         dbc.Col([
-            html.H4("Auswahl der Daten", style={'padding': '0px 10px', 'color': '#6C53C8'}),
+            html.H4('Auswahl der Daten', style={'padding': '0px 10px', 'color': '#6C53C8'}),
+            html.Div('Daten anzeigen in:', style={'margin': '0 px 5px'}),
+            dcc.RadioItems(['CHF', "% des Bruttoeinkommen"], 'CHF', id='radioitems', style={'margin': '0px 5px 5px'}),
             dcc.Input(id='textsearch', placeholder='Suche nach Kategorie...', value=None, type='text', style={'margin': '5px'}),
             dbc.Button('Suchen', id='search-button', style={'backgroundColor': '#6C53C8', 'border': '0px', 'height': '35px'}),
             html.Br(),
@@ -312,10 +345,11 @@ def toggle_div_visibility(n_clicks, current_style):
 
 @callback(Output('graph-output', 'figure'), 
           Input({'type': 'checklist', 'key': ALL}, 'value'),
-          Input('tabs', 'active_tab')
+          Input('tabs', 'active_tab'),
+          Input('radioitems', 'value')
           )
 
-def update_graphs(all_checked_values, active_tab):
+def update_graphs(all_checked_values, active_tab, radioitems):
     checked_values = []
     for checklist in all_checked_values:
         if checklist: #Not empty
@@ -323,38 +357,68 @@ def update_graphs(all_checked_values, active_tab):
                 checked_values.append(value)
     
     if active_tab == 'tab_year':
-        df_graph = df_year_chf[df_year_chf['Kategorie'].isin(checked_values)]
-        graph = px.line(df_graph, x='Jahr', y='CHF', color='Kategorie', text='CHF')
+        if radioitems == 'CHF':            
+            df_graph = df_year_chf[df_year_chf['Kategorie'].isin(checked_values)]
+            graph = px.line(df_graph, x='Jahr', y='CHF', color='Kategorie', text='CHF')
+        else:
+            df_graph = df_year_per[df_year_per['Kategorie'].isin(checked_values)]
+            graph = px.line(df_graph, x='Jahr', y='%', color='Kategorie', text='%')
         graph.update_traces(textposition='top center')
     elif active_tab == 'tab_age':
-        df_graph = df_age_chf[df_age_chf['Kategorie'].isin(checked_values)]
-        graph = px.bar(df_graph, x='Altersklasse', y='CHF', color='Kategorie', barmode='group', text_auto=True) 
+        if radioitems == 'CHF':
+            df_graph = df_age_chf[df_age_chf['Kategorie'].isin(checked_values)]
+            graph = px.bar(df_graph, x='Altersklasse', y='CHF', color='Kategorie', barmode='group', text_auto=True) 
+        else:
+            df_graph = df_age_per[df_age_per['Kategorie'].isin(checked_values)]
+            graph = px.bar(df_graph, x='Altersklasse', y='%', color='Kategorie', barmode='group', text_auto=True) 
         graph.update_traces(textposition='outside')
     elif active_tab == 'tab_income':
-        df_graph = df_income_chf[df_income_chf['Kategorie'].isin(checked_values)]
-        graph = px.bar(df_graph, x='Einkommensklasse', y='CHF', color='Kategorie', barmode='group', text_auto=True)
+        if radioitems == 'CHF':
+            df_graph = df_income_chf[df_income_chf['Kategorie'].isin(checked_values)]
+            graph = px.bar(df_graph, x='Einkommensklasse', y='CHF', color='Kategorie', barmode='group', text_auto=True)
+        else:
+            df_graph = df_income_per[df_income_per['Kategorie'].isin(checked_values)]
+            graph = px.bar(df_graph, x='Einkommensklasse', y='%', color='Kategorie', barmode='group', text_auto=True)
         graph.update_traces(textposition='outside')
     elif active_tab == 'tab_type':
-        df_graph = df_type_chf[df_type_chf['Kategorie'].isin(checked_values)]
-        graph = px.bar(df_graph, x='Haushaltstyp', y='CHF', color='Kategorie', barmode='group', text_auto=True)
+        if radioitems == 'CHF':
+            df_graph = df_type_chf[df_type_chf['Kategorie'].isin(checked_values)]
+            graph = px.bar(df_graph, x='Haushaltstyp', y='CHF', color='Kategorie', barmode='group', text_auto=True)
+        else:
+            df_graph = df_type_per[df_type_per['Kategorie'].isin(checked_values)]
+            graph = px.bar(df_graph, x='Haushaltstyp', y='%', color='Kategorie', barmode='group', text_auto=True)            
         graph.update_traces(textposition='outside')
         graph.update_layout(margin=dict(t=20, b=0, l=40, r=40), height=480) #Braucht sonst zu viel Platz wegen den langen Beschriftungen und Zahl auf Balken wird dann abgeschnitten.
     elif active_tab == 'tab_region':
-        df_graph = df_region_chf[df_region_chf['Kategorie'].isin(checked_values)]
-        graph = px.bar(df_graph, x='Grossregion', y='CHF', color='Kategorie', barmode='group', text_auto=True)
+        if radioitems == 'CHF':
+            df_graph = df_region_chf[df_region_chf['Kategorie'].isin(checked_values)]
+            graph = px.bar(df_graph, x='Grossregion', y='CHF', color='Kategorie', barmode='group', text_auto=True)
+        else:
+            df_graph = df_region_per[df_region_per['Kategorie'].isin(checked_values)]
+            graph = px.bar(df_graph, x='Grossregion', y='%', color='Kategorie', barmode='group', text_auto=True)            
         graph.update_traces(textposition='outside')
     elif active_tab == 'tab_lang':
-        df_graph = df_lang_chf[df_lang_chf['Kategorie'].isin(checked_values)]
-        graph = px.bar(df_graph, x='Sprachregion', y='CHF', color='Kategorie', barmode='group', text_auto=True)
+        if radioitems == 'CHF':
+            df_graph = df_lang_chf[df_lang_chf['Kategorie'].isin(checked_values)]
+            graph = px.bar(df_graph, x='Sprachregion', y='CHF', color='Kategorie', barmode='group', text_auto=True)
+        else: 
+            df_graph = df_lang_per[df_lang_per['Kategorie'].isin(checked_values)]
+            graph = px.bar(df_graph, x='Sprachregion', y='%', color='Kategorie', barmode='group', text_auto=True)            
         graph.update_traces(textposition='outside')
     elif active_tab == 'tab_canton':
-        df_graph = df_canton_chf[df_canton_chf['Kategorie'].isin(checked_values)]
-        graph = px.bar(df_graph, x='Kanton', y='CHF', color='Kategorie', barmode='group', text_auto=True)
+        if radioitems == 'CHF':
+            df_graph = df_canton_chf[df_canton_chf['Kategorie'].isin(checked_values)]
+            graph = px.bar(df_graph, x='Kanton', y='CHF', color='Kategorie', barmode='group', text_auto=True)
+        else:
+            df_graph = df_canton_per[df_canton_per['Kategorie'].isin(checked_values)]
+            graph = px.bar(df_graph, x='Kanton', y='%', color='Kategorie', barmode='group', text_auto=True)            
         graph.update_traces(textposition='outside')
 
-    graph.update_layout(template='plotly_white')
+    max_yaxis = max(df_graph['CHF' if radioitems == 'CHF' else '%'], default=1000) * 1.1
+    graph.update_layout(template='plotly_white', yaxis=dict(range=[0, max_yaxis]))
     return graph
 
 
 if __name__ == '__main__':
     app.run_server(debug=True)
+
