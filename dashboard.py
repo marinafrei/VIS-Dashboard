@@ -7,29 +7,32 @@ import dash_bootstrap_components as dbc
 
 app = Dash (__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
+############################## Daten einlesen ####################################
 rows_to_skip= list(range(0,13)) + [14,15,16,18,19,20] + list(range(553,583))
 
 df_year_chf = pd.read_excel('data.xlsx', sheet_name='Jahr', skiprows=rows_to_skip, usecols='A:G,I,K,M')
-df_year_per = pd.read_excel('data.xlsx', sheet_name='Jahr', skiprows=rows_to_skip, usecols='A:E,H,J,L,N')
+df_year_per = pd.read_excel('data.xlsx', sheet_name='Jahr', skiprows=rows_to_skip, usecols='A:F,H,J,L,N')
 
 df_region_chf = pd.read_excel('data.xlsx', sheet_name='Grossregion', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q,S')
-df_region_per = pd.read_excel('data.xlsx', sheet_name='Grossregion', skiprows=rows_to_skip, usecols='A:E,H,J,L,N,P,R,T')
+df_region_per = pd.read_excel('data.xlsx', sheet_name='Grossregion', skiprows=rows_to_skip, usecols='A:F,H,J,L,N,P,R,T')
 
 df_lang_chf = pd.read_excel('data.xlsx', sheet_name='Sprachregion', skiprows=rows_to_skip, usecols='A:G,I,K')
-df_lang_per = pd.read_excel('data.xlsx', sheet_name='Sprachregion', skiprows=rows_to_skip, usecols='A:E,H,J,L')
+df_lang_per = pd.read_excel('data.xlsx', sheet_name='Sprachregion', skiprows=rows_to_skip, usecols='A:F,H,J,L')
 
 df_canton_chf = pd.read_excel('data.xlsx', sheet_name='Kantone', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q,S,U')
-df_canton_per = pd.read_excel('data.xlsx', sheet_name='Kantone', skiprows=rows_to_skip, usecols='A:E,H,J,L,N,P,R,T,V')
+df_canton_per = pd.read_excel('data.xlsx', sheet_name='Kantone', skiprows=rows_to_skip, usecols='A:F,H,J,L,N,P,R,T,V')
 
 df_age_chf = pd.read_excel('data.xlsx', sheet_name='Altersklasse', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q')
-df_age_per = pd.read_excel('data.xlsx', sheet_name='Altersklasse', skiprows=rows_to_skip, usecols='A:E,H,J,L,N,P,R')
+df_age_per = pd.read_excel('data.xlsx', sheet_name='Altersklasse', skiprows=rows_to_skip, usecols='A:F,H,J,L,N,P,R')
 
 df_income_chf = pd.read_excel('data.xlsx', sheet_name='Einkommen', skiprows=rows_to_skip, usecols='A:G,I,K,M,O')
-df_income_per = pd.read_excel('data.xlsx', sheet_name='Einkommen', skiprows=rows_to_skip, usecols='A:E,H,J,L,N,P')
+df_income_per = pd.read_excel('data.xlsx', sheet_name='Einkommen', skiprows=rows_to_skip, usecols='A:F,H,J,L,N,P')
 
 df_type_chf = pd.read_excel('data.xlsx', sheet_name='Haushaltstyp', skiprows=rows_to_skip, usecols='A:G,I,K,M,O,Q')
-df_type_per = pd.read_excel('data.xlsx', sheet_name='Haushaltstyp', skiprows=rows_to_skip, usecols='A:E,H,J,L,N,P,R')
+df_type_per = pd.read_excel('data.xlsx', sheet_name='Haushaltstyp', skiprows=rows_to_skip, usecols='A:F,H,J,L,N,P,R')
 
+
+############################## Daten bereinigen ####################################
 
 #Die Zellenbeschreibungen sind nicht alle in der ersten Spalte, sondern pro Ebene eins eingerückt.
 #Dies wird hier bereinigt und damit man die Info zur Ebene nicht verliert eine zusätzliche Spalte 'Ebene' eingefügt
@@ -54,19 +57,18 @@ def clean_data(dataframe, columnname):
         if pd.notna(row['Unnamed: 4']):
             dataframe.loc[index, 'Kategorie'] = row['Unnamed: 4']
             dataframe.loc[index, 'Ebene'] = '5'
-
     dataframe.drop(['Unnamed: 1', 'Unnamed: 2', 'Unnamed: 3', 'Unnamed: 4'], axis=1 , inplace=True)
     column_names = dataframe.columns
     if '.1' in column_names[2]:       
         column_names = [column.replace('.1', '') for column in dataframe.columns] #Da die Spaltennamen im Excel doppelt sind, wird dann beim Einlesen des percent df ein .1 an die Spaltennamen angehängt. Dies wird hier bereinigt.
         dataframe.columns = column_names
         dataframe_long = dataframe.melt(id_vars=['Kategorie', 'Ebene'], var_name=columnname, value_name='%') #Hier wird der df in das Long-Format geändert, da man so viel einfacher Diagramme mit plotly erstellen kann.
-        dataframe_long['%'] = pd.to_numeric(dataframe_long['%'], errors='coerce') #konvertiert die Spalte Prozent in numerische Werte und wandelt nicht-kobertierbare Werte d.h. '( )' zu NaN um
+        dataframe_long['%'] = pd.to_numeric(dataframe_long['%'], errors='coerce') #konvertiert die Spalte Prozent in numerische Werte und wandelt nicht-konvertierbare Werte d.h. '( )' zu NaN um
         dataframe_long['%'] = dataframe_long['%'] * 100
         dataframe_long['%'] = dataframe_long['%'].round(2) #Rundet die Spalte Prozent auf zwei Nachkommastellen   
     else:     
         dataframe_long = dataframe.melt(id_vars=['Kategorie', 'Ebene'], var_name=columnname, value_name='CHF') #Hier wird der df in das Long-Format geändert, da man so viel einfacher Diagramme mit plotly erstellen kann.
-        dataframe_long['CHF'] = pd.to_numeric(dataframe_long['CHF'], errors='coerce') #konvertiert die Spalte CHF in numerische Werte und wandelt nicht-kobertierbare Werte d.h. '( )' zu NaN um
+        dataframe_long['CHF'] = pd.to_numeric(dataframe_long['CHF'], errors='coerce') #konvertiert die Spalte CHF in numerische Werte und wandelt nicht-konvertierbare Werte d.h. '( )' zu NaN um
         dataframe_long['CHF'] = dataframe_long['CHF'].round(2) #Rundet die Spalte CHF auf zwei Nachkommastellen    
     return dataframe_long
 
@@ -87,6 +89,7 @@ df_type_chf = clean_data(df_type_chf, 'Haushaltstyp')
 df_type_per = clean_data(df_type_per, 'Haushaltstyp')
 
 
+######################### Nötige Schritte für die Erstellung der Checkliste #####################
 
 # Erzeugen eines dict mit den Kategorien >> wird für die Checkliste benötigt
 # Dabei kann ein beliebiger dict von oben verwendet werden, da die Kategorien bei allen gleich sind
@@ -114,47 +117,6 @@ for index, row in df_year_chf.iterrows():
     elif row['Ebene'] == '5':
         rowkey_level5 = row['Kategorie']
         categories_data[rowkey_level0][rowkey_level1][rowkey_level2][rowkey_level3][rowkey_level4][rowkey_level5] = {}
-
-
-def search_checklist(data, search_value, styles={}, no_result=True):
-        for key, value in data.items():
-            styles[key] = [{'margin-left': '20px', 'display': 'flex'}]
-            if key == 'Bruttoeinkommen': #oberste Ebene immer einblenden
-                styles[key].append({'margin-left': '20px', 'display': 'block'})
-                styles[key].append('▾')
-            elif '.' not in key[0:6]: #die untersten Ebenen haben einen Punkt im key und bei der untersten Ebenen gibt es kein toggle-div, da es dort keine Unterpunkte mehr gibt zum Einblenden.
-                styles[key].append({'margin-left': '20px', 'display': 'none'})
-                styles[key].append('▸')
-            elif '.' in key[0:6]:
-                styles[key].append('empty')
-                styles[key].append('empty')                    
-            if search_value.lower() in key.lower():
-                styles[key][0] = {'margin': '3px','margin-left': '20px', 'display': 'flex', 'backgroundColor': 'lightblue'}
-                no_result=False
-                for styles_key in styles:
-                    category_number = styles_key.split(':')[0]
-                    if category_number in key and styles_key != key:
-                        styles[styles_key][1] = {'margin-left': '20px', 'display': 'block'}
-                        styles[styles_key][2] = '▾'
-                    if key.startswith('5') or key.startswith('6'):
-                        styles['50: Konsumausgaben'][1] = {'margin-left': '20px', 'display': 'block'}
-                        styles['50: Konsumausgaben'][2] = '▾'
-                    elif key.startswith('31') or key.startswith('32') or key.startswith('33'):
-                        styles['30: Obligatorische Transferausgaben'][1] = {'margin-left': '20px', 'display': 'block'}
-                        styles['30: Obligatorische Transferausgaben'][2] = '▾'
-                    elif key.startswith('36'):
-                        styles['35: Monetäre Transferausgaben an andere Haushalte'][1] = {'margin-left': '20px', 'display': 'block'}
-                        styles['35: Monetäre Transferausgaben an andere Haushalte'][2] = '▾'
-                    elif key.startswith('4'):
-                        styles['40: Übrige Versicherungen, Gebühren und Übertragungen'][1] = {'margin-left': '20px', 'display': 'block'}
-                        styles['40: Übrige Versicherungen, Gebühren und Übertragungen'][2] = '▾'
-                    elif key.startswith('8'):
-                        styles['80: Prämien für die Lebensversicherung'][1] = {'margin-left': '20px', 'display': 'block'}
-                        styles['80: Prämien für die Lebensversicherung'][2] = '▾'
-            if isinstance(value, dict):
-                _, child_no_result = search_checklist(value, search_value, styles, no_result)
-                no_result = no_result and child_no_result        
-        return styles, no_result
 
 def generate_checklist(data, level=0, return_values=None, checked_values=None):
     # Erzeugt rekursiv eine verschachtelte Checkliste.
@@ -221,6 +183,49 @@ def generate_checklist(data, level=0, return_values=None, checked_values=None):
 
 nested_checklist = generate_checklist(categories_data)
 
+#Wird für den Callback text_search benötigt
+def search_checklist(data, search_value, styles={}, no_result=True):
+        for key, value in data.items():
+            styles[key] = [{'margin-left': '20px', 'display': 'flex'}]
+            if key == 'Bruttoeinkommen': #oberste Ebene immer einblenden
+                styles[key].append({'margin-left': '20px', 'display': 'block'})
+                styles[key].append('▾')
+            elif '.' not in key[0:6]: #die untersten Ebenen haben einen Punkt im key und bei der untersten Ebenen gibt es kein toggle-div, da es dort keine Unterpunkte mehr gibt zum Einblenden.
+                styles[key].append({'margin-left': '20px', 'display': 'none'})
+                styles[key].append('▸')
+            elif '.' in key[0:6]:
+                styles[key].append('empty')
+                styles[key].append('empty')                    
+            if search_value.lower() in key.lower():
+                styles[key][0] = {'margin': '0px 0px 0px 20px', 'display': 'flex', 'backgroundColor': 'lightblue'}
+                no_result=False
+                for styles_key in styles:
+                    category_number = styles_key.split(':')[0]
+                    if category_number in key and styles_key != key:
+                        styles[styles_key][1] = {'margin-left': '20px', 'display': 'block'}
+                        styles[styles_key][2] = '▾'
+                    if key.startswith('5') or key.startswith('6'):
+                        styles['50: Konsumausgaben'][1] = {'margin-left': '20px', 'display': 'block'}
+                        styles['50: Konsumausgaben'][2] = '▾'
+                    elif key.startswith('31') or key.startswith('32') or key.startswith('33'):
+                        styles['30: Obligatorische Transferausgaben'][1] = {'margin-left': '20px', 'display': 'block'}
+                        styles['30: Obligatorische Transferausgaben'][2] = '▾'
+                    elif key.startswith('36'):
+                        styles['35: Monetäre Transferausgaben an andere Haushalte'][1] = {'margin-left': '20px', 'display': 'block'}
+                        styles['35: Monetäre Transferausgaben an andere Haushalte'][2] = '▾'
+                    elif key.startswith('4'):
+                        styles['40: Übrige Versicherungen, Gebühren und Übertragungen'][1] = {'margin-left': '20px', 'display': 'block'}
+                        styles['40: Übrige Versicherungen, Gebühren und Übertragungen'][2] = '▾'
+                    elif key.startswith('8'):
+                        styles['80: Prämien für die Lebensversicherung'][1] = {'margin-left': '20px', 'display': 'block'}
+                        styles['80: Prämien für die Lebensversicherung'][2] = '▾'
+            if isinstance(value, dict):
+                _, child_no_result = search_checklist(value, search_value, styles, no_result)
+                no_result = no_result and child_no_result        
+        return styles, no_result
+
+
+#################################### App Layout erstellen ###########################################
 
 app.layout = html.Div([
     dbc.Row([
@@ -276,6 +281,10 @@ app.layout = html.Div([
     ])
 ])
 
+
+
+######################################## Callbacks #############################################
+
 @callback(Output('modal', 'is_open'),
           Input('info', 'n_clicks'),
           prevent_initial_call=True)
@@ -283,7 +292,6 @@ app.layout = html.Div([
 def manage_info_popup(n_clicks):
     is_open = True
     return is_open
-
 
 
 @callback([Output('nested_checklist', 'children', allow_duplicate=True),
@@ -413,11 +421,12 @@ def update_graphs(all_checked_values, active_tab, radioitems):
             df_graph = df_canton_per[df_canton_per['Kategorie'].isin(checked_values)]
             graph = px.bar(df_graph, x='Kanton', y='%', color='Kategorie', barmode='group', text_auto=True)            
         graph.update_traces(textposition='outside')
-
     max_yaxis = max(df_graph['CHF' if radioitems == 'CHF' else '%'], default=1000) * 1.1
     graph.update_layout(template='plotly_white', yaxis=dict(range=[0, max_yaxis]))
     return graph
 
+
+######################################## App starten #####################################
 
 if __name__ == '__main__':
     app.run_server(debug=True)
