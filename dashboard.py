@@ -197,7 +197,7 @@ def search_checklist(data, search_value, styles={}, no_result=True):
                 styles[key].append('empty')
                 styles[key].append('empty')                    
             if search_value.lower() in key.lower():
-                styles[key][0] = {'margin': '0px 0px 0px 20px', 'display': 'flex', 'backgroundColor': 'lightblue'}
+                styles[key][0] = {'margin': '3px 0px 3px 20px', 'display': 'flex', 'backgroundColor': 'lightblue'}
                 no_result=False
                 for styles_key in styles:
                     category_number = styles_key.split(':')[0]
@@ -264,7 +264,9 @@ app.layout = html.Div([
             html.Br(),
             dbc.Button('Checkliste zurücksetzen', id='reset', style={'backgroundColor': '#6C53C8', 'border': '0px', 'margin': '5px'}),
             html.Div('', id='show_no_result', style={'padding': '0px 5px', 'font-weight': 'bold'}),
+            dcc.Loading(id='loading', type='circle', overlay_style={"visibility":"visible", "filter": "blur(2px)"}, children=
             html.Div(nested_checklist, id='nested_checklist')
+            )
         ], width=3),
         dbc.Col([
             dbc.Tabs(id='tabs', active_tab='tab_year', children=[
