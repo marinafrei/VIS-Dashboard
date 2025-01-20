@@ -62,10 +62,10 @@ def clean_data(dataframe, columnname):
     if '.1' in column_names[2]:       
         column_names = [column.replace('.1', '') for column in dataframe.columns] #Da die Spaltennamen im Excel doppelt sind, wird dann beim Einlesen des percent df ein .1 an die Spaltennamen angehängt. Dies wird hier bereinigt.
         dataframe.columns = column_names
-        dataframe_long = dataframe.melt(id_vars=['Kategorie', 'Ebene'], var_name=columnname, value_name='%') #Hier wird der df in das Long-Format geändert, da man so viel einfacher Diagramme mit plotly erstellen kann.
-        dataframe_long['%'] = pd.to_numeric(dataframe_long['%'], errors='coerce') #konvertiert die Spalte Prozent in numerische Werte und wandelt nicht-konvertierbare Werte d.h. '( )' zu NaN um
-        dataframe_long['%'] = dataframe_long['%'] * 100
-        dataframe_long['%'] = dataframe_long['%'].round(2) #Rundet die Spalte Prozent auf zwei Nachkommastellen   
+        dataframe_long = dataframe.melt(id_vars=['Kategorie', 'Ebene'], var_name=columnname, value_name='% des Bruttoeinkommen') #Hier wird der df in das Long-Format geändert, da man so viel einfacher Diagramme mit plotly erstellen kann.
+        dataframe_long['% des Bruttoeinkommen'] = pd.to_numeric(dataframe_long['% des Bruttoeinkommen'], errors='coerce') #konvertiert die Spalte Prozent in numerische Werte und wandelt nicht-konvertierbare Werte d.h. '( )' zu NaN um
+        dataframe_long['% des Bruttoeinkommen'] = dataframe_long['% des Bruttoeinkommen'] * 100
+        dataframe_long['% des Bruttoeinkommen'] = dataframe_long['% des Bruttoeinkommen'].round(2) #Rundet die Spalte Prozent auf zwei Nachkommastellen   
     else:     
         dataframe_long = dataframe.melt(id_vars=['Kategorie', 'Ebene'], var_name=columnname, value_name='CHF') #Hier wird der df in das Long-Format geändert, da man so viel einfacher Diagramme mit plotly erstellen kann.
         dataframe_long['CHF'] = pd.to_numeric(dataframe_long['CHF'], errors='coerce') #konvertiert die Spalte CHF in numerische Werte und wandelt nicht-konvertierbare Werte d.h. '( )' zu NaN um
@@ -372,7 +372,7 @@ def update_graphs(all_checked_values, active_tab, radioitems):
             graph = px.line(df_graph, x='Jahr', y='CHF', color='Kategorie', text='CHF')
         else:
             df_graph = df_year_per[df_year_per['Kategorie'].isin(checked_values)]
-            graph = px.line(df_graph, x='Jahr', y='%', color='Kategorie', text='%')
+            graph = px.line(df_graph, x='Jahr', y='% des Bruttoeinkommen', color='Kategorie', text='% des Bruttoeinkommen')
         graph.update_traces(textposition='top center')
     elif active_tab == 'tab_age':
         if radioitems == 'CHF':
@@ -380,7 +380,7 @@ def update_graphs(all_checked_values, active_tab, radioitems):
             graph = px.bar(df_graph, x='Altersklasse', y='CHF', color='Kategorie', barmode='group', text_auto=True) 
         else:
             df_graph = df_age_per[df_age_per['Kategorie'].isin(checked_values)]
-            graph = px.bar(df_graph, x='Altersklasse', y='%', color='Kategorie', barmode='group', text_auto=True) 
+            graph = px.bar(df_graph, x='Altersklasse', y='% des Bruttoeinkommen', color='Kategorie', barmode='group', text_auto=True) 
         graph.update_traces(textposition='outside')
     elif active_tab == 'tab_income':
         if radioitems == 'CHF':
@@ -388,7 +388,7 @@ def update_graphs(all_checked_values, active_tab, radioitems):
             graph = px.bar(df_graph, x='Einkommensklasse', y='CHF', color='Kategorie', barmode='group', text_auto=True)
         else:
             df_graph = df_income_per[df_income_per['Kategorie'].isin(checked_values)]
-            graph = px.bar(df_graph, x='Einkommensklasse', y='%', color='Kategorie', barmode='group', text_auto=True)
+            graph = px.bar(df_graph, x='Einkommensklasse', y='% des Bruttoeinkommen', color='Kategorie', barmode='group', text_auto=True)
         graph.update_traces(textposition='outside')
     elif active_tab == 'tab_type':
         if radioitems == 'CHF':
@@ -396,7 +396,7 @@ def update_graphs(all_checked_values, active_tab, radioitems):
             graph = px.bar(df_graph, x='Haushaltstyp', y='CHF', color='Kategorie', barmode='group', text_auto=True)
         else:
             df_graph = df_type_per[df_type_per['Kategorie'].isin(checked_values)]
-            graph = px.bar(df_graph, x='Haushaltstyp', y='%', color='Kategorie', barmode='group', text_auto=True)            
+            graph = px.bar(df_graph, x='Haushaltstyp', y='% des Bruttoeinkommen', color='Kategorie', barmode='group', text_auto=True)            
         graph.update_traces(textposition='outside')
         graph.update_layout(margin=dict(t=20, b=0, l=40, r=40), height=480) #Braucht sonst zu viel Platz wegen den langen Beschriftungen und Zahl auf Balken wird dann abgeschnitten.
     elif active_tab == 'tab_region':
@@ -405,7 +405,7 @@ def update_graphs(all_checked_values, active_tab, radioitems):
             graph = px.bar(df_graph, x='Grossregion', y='CHF', color='Kategorie', barmode='group', text_auto=True)
         else:
             df_graph = df_region_per[df_region_per['Kategorie'].isin(checked_values)]
-            graph = px.bar(df_graph, x='Grossregion', y='%', color='Kategorie', barmode='group', text_auto=True)            
+            graph = px.bar(df_graph, x='Grossregion', y='% des Bruttoeinkommen', color='Kategorie', barmode='group', text_auto=True)            
         graph.update_traces(textposition='outside')
     elif active_tab == 'tab_lang':
         if radioitems == 'CHF':
@@ -413,7 +413,7 @@ def update_graphs(all_checked_values, active_tab, radioitems):
             graph = px.bar(df_graph, x='Sprachregion', y='CHF', color='Kategorie', barmode='group', text_auto=True)
         else: 
             df_graph = df_lang_per[df_lang_per['Kategorie'].isin(checked_values)]
-            graph = px.bar(df_graph, x='Sprachregion', y='%', color='Kategorie', barmode='group', text_auto=True)            
+            graph = px.bar(df_graph, x='Sprachregion', y='% des Bruttoeinkommen', color='Kategorie', barmode='group', text_auto=True)            
         graph.update_traces(textposition='outside')
     elif active_tab == 'tab_canton':
         if radioitems == 'CHF':
@@ -421,9 +421,9 @@ def update_graphs(all_checked_values, active_tab, radioitems):
             graph = px.bar(df_graph, x='Kanton', y='CHF', color='Kategorie', barmode='group', text_auto=True)
         else:
             df_graph = df_canton_per[df_canton_per['Kategorie'].isin(checked_values)]
-            graph = px.bar(df_graph, x='Kanton', y='%', color='Kategorie', barmode='group', text_auto=True)            
+            graph = px.bar(df_graph, x='Kanton', y='% des Bruttoeinkommen', color='Kategorie', barmode='group', text_auto=True)            
         graph.update_traces(textposition='outside')
-    max_yaxis = max(df_graph['CHF' if radioitems == 'CHF' else '%'], default=1000) * 1.1
+    max_yaxis = max(df_graph['CHF' if radioitems == 'CHF' else '% des Bruttoeinkommen'], default=1000) * 1.1
     graph.update_layout(template='plotly_white', yaxis=dict(range=[0, max_yaxis]))
     return graph
 
@@ -431,5 +431,5 @@ def update_graphs(all_checked_values, active_tab, radioitems):
 ######################################## App starten #####################################
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)
 
